@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" width="device-width">
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="../css/main.css">
+
+        <title>ScoutNet</title>
+    <!--    TODO: Favicon and logo-->
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="row">
+                <div id="nav" class="col-xs-12 col-sm-12 col-md-12"></div>
+            </div>
+            <div class="list row">
+                <div class="col-xs-12 col-sm-12 col-md-12">
+                    <div class="col-xs-2 col-sm-2 col-md-2"></div>
+                    <div class="col-xs-5 col-sm-5 col-md-5">
+                        <select id="sel" style="width: 100%;"></select>
+                    </div>
+                    <div class="col-xs-5 col-sm-5 col-md-5">
+                        <div class="col-xs-1 col-sm-1 col-md-1">
+                            <button id="get" class="button"><span class="glyphicon glyphicon-search"></span></button>
+                        </div>
+                        <div class="col-xs-1 col-sm-1 col-md-1"></div>
+                        <div class="col-xs-1 col-sm-1 col-md-1">
+                            <button id="add" class="button"><span class="glyphicon glyphicon-plus-sign"></span></button>
+                        </div>
+                        <div class="col-xs-1 col-sm-1 col-md-1"></div>
+                        <div class="col-xs-1 col-sm-1 col-md-1">
+                            <button id="edit" class="button"><span class="glyphicon glyphicon-pencil"></span></button>                        
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="list row">
+                <div id="display" class="col-xs-12 col-sm-12 col-md-12"></div>
+            </div>
+        </div>
+    </body>
+
+    <style>        
+        #display label,p,td,tr {
+            font-family: sans-serif;
+        }
+    </style>
+
+<!--  External Scripts (Bootstrap and JQuery)  -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha256-KXn5puMvxCw+dAYznun+drMdG1IFl3agK0p/pqT9KAo= sha512-2e8qq0ETcfWRI4HJBzQiA3UoyFk6tbNyG+qSaIBZLyW9Xf3sWZHN/lxe9fTh1U45DpPf07yj94KsUHHWe4Yk1A==" crossorigin="anonymous"></script>
+    <script src="../teamData.js" ></script>
+
+<!--  App  -->
+    <script>  
+        //Load Nav bar
+        $("#nav").load("../nav.html"); 
+        
+
+        //Init WebSocket 
+        //TODO: dynamic address
+        var ws = new WebSocket(serverAddress);
+
+        ws.onopen = function() {};
+
+        ws.onmessage = function (evt) {
+            
+            //If server response is greeting, request team data
+            if(evt.data=="Hello") {
+                var query = {"TYPE":"LIST",
+                             "UUID":localStorage.getItem("UUID")};
+
+                ws.send(JSON.stringify(query));
+                
+            //If server is sending list, add teams to dropdown and put data in localStorage
+            } else if(evt.data.indexOf("LIST:")==0) {
+
+                var teamData = JSON.parse(evt.data.substring("LIST:".length));//Parse attached team data
+
+                for (var key in teamData) {
+                    addTeam(JSON.parse(teamData[key]));
+                }
+
+            //If logout signal, go back to login screen
+            } else if(evt.data=="LOGOUT") {
+                alert("The server has been restarted, you will need to log in again.");
+                    window.location.href = "../";
+            }
+        };
+
+        ws.onclose = function() {
+        };
+
+        ws.onerror = function(err) {
+        };
+
+
+        var display = document.getElementById("display");
+        var sel = document.getElementById("sel");
+
+        $("#get").click(function() {
+            while(display.firstChild)
+                display.removeChild(display.firstChild);
+            
+            var data = JSON.parse(localStorage.getItem(sel.options[sel.selectedIndex].value));
+            
+            document.title = "Team "+data["Team Number"];
+            
+            for(var key in dataTemplate) {
+                if(key=="VERSION")
+                    continue;
+                
+                var title = document.createElement("h3");
+                title.appendChild(document.createTextNode(key));
+                
+                var info = document.createElement("p");
+                info.appendChild(document.createTextNode(data[key]));
+                
+                display.appendChild(title);
+                display.appendChild(info);
+            }
+        });
+
+        $("#edit").click(function() {
+            localStorage.setItem("ACTIVE",localStorage.getItem(sel.options[sel.selectedIndex].value));
+            window.location.href = "../edit/"
+        });
+        
+        $("#add").click(function() {
+            var teamName = prompt("Enter team name:","");
+            if(teamName!="" && teamName!=null) {
+                if(localStorage.getItem(teamName) != null) {
+                    alert("Team already exists. Editing existing info instead");
+                    localStorage.setItem("ACTIVE",localStorage.getItem(teamName));
+                    window.location.href = "../edit/";
+                    return;
+                }
+                var newTeam = {"Team Number":teamName};
+                localStorage.setItem("ACTIVE",JSON.stringify(newTeam));
+                window.location.href = "../edit/" 
+            }
+        });
+        
+
+
+        function addTeam(data) {
+            var item = document.createElement("option");
+            var value = document.createElement("label");  
+            
+            value.appendChild(document.createTextNode(data["Team Number"]));
+            item.appendChild(value);
+            sel.appendChild(item);
+            
+            localStorage.setItem(data["Team Number"],JSON.stringify(data));
+        }
+        
+        $(window).scroll(function(){
+            if( $(window).scrollTop() >= 10 ){
+                $("#nav").fadeOut();
+            } else {
+                $("#nav").fadeIn();
+            }
+        });
+    </script>
+</html>

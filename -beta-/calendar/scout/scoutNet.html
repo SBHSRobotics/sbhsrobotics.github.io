@@ -1,0 +1,110 @@
+<head>
+    <title>ScoutNet Login</title>
+    <link rel="stylesheet" type="text/css" href="./css/main.css">
+<!--    TODO: Favicon and logo-->
+</head>
+
+<body>
+    <div id="login-form" class="box">
+        <form name="login">
+            <table>
+                <tr>
+                    <td><label id="userL">Username:</label></td>
+                    <td><input type="text" id="user" name="username" autofocus="true" /></td>
+                </tr>
+                <tr>
+                    <td>
+                        <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td><label id="passL">Password:</label></td>
+                    <td><input type="password" id="pass" name="password"  /><br></td>
+                </tr>
+            </table>        
+        </form>        
+        <input type="button" class="button" id="submit" name="submit" value="Submit" />
+    </div>
+</body>
+
+
+<style>
+    #submit {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }  
+</style>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha256-KXn5puMvxCw+dAYznun+drMdG1IFl3agK0p/pqT9KAo= sha512-2e8qq0ETcfWRI4HJBzQiA3UoyFk6tbNyG+qSaIBZLyW9Xf3sWZHN/lxe9fTh1U45DpPf07yj94KsUHHWe4Yk1A==" crossorigin="anonymous"></script>
+<script src="../teamData.js" ></script>
+
+<script>   
+    if(lsCheck() && localStorage.getItem("UUID")!=null) {
+        localStorage.removeItem("UUID");
+        if(localStorage.getItem("USER")!=null)
+            localStorage.removeItem("USER");
+    }
+    
+    function lsCheck() {
+        try {
+            localStorage.setItem("FOO","BAR");
+            localStorage.removeItem("FOO");
+            return true;
+        }catch(e) {
+            alert("Sorry, your browser is not compatible with this app. "+e);
+            return false;
+        }
+    }
+        
+    
+    var ws;
+
+    function init(ip) {
+        if(!lsCheck()) {
+            return;
+        }
+        if(ip!=null) {
+            ws = new WebSocket("ws://"+ip);
+        } else {
+            ws = new WebSocket(serverAddress);
+        }
+
+        ws.onopen = function() {
+        };
+
+        ws.onmessage = function (evt) {
+//            alert(evt.data);
+            if(evt.data=="Hello") {
+                var loginData = '{ "TYPE":"AUTH" , '+
+                    '"USER":"'+document.getElementById("user").value+'" , '+
+                    '"PASS":"'+document.getElementById("pass").value+'" }';
+                ws.send(loginData);
+
+                document.getElementById("pass").value = "thisisapassword";
+            } else if(evt.data.indexOf("SUCCESS:")==0) {            
+                localStorage.setItem("UUID",evt.data.substring("SUCCESS:".length))
+                document.getElementById("pass").value = "";
+                localStorage.setItem("USER",document.getElementById("user").value);
+                window.location.href = "./list/";
+            } else if(evt.data=="FAIL") {
+                document.getElementById("pass").value = "";
+                alert("Username or password is invalid.");
+            }
+        };
+
+        ws.onclose = function() {
+        };
+
+        ws.onerror = function(err) {
+        };
+    };   
+    
+    document.getElementById("submit").onclick = function() {
+        init(null);
+    };
+    
+document.getElementById("server").value = "<Automatic>";//TODO: Save in db on submit
+    
+</script>

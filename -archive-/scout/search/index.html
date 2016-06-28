@@ -1,0 +1,119 @@
+<head>
+    <title>ScoutNet Search</title>
+</head>
+
+<body>
+    <div id="search" class="box">
+        <form name="login">
+            <label id="title">Select Team:</label>
+            <br>
+            <input type="text" id="team" name="team" autofocus="true" />
+            <table id="buttons">
+                <tr>
+                    <td><input type="button" id="view" class="button" name="view" value="View" /></td>
+                    <br>
+                    <td><input type="button" id="edit" class="button" name="edit" value="Edit" /></td>
+                </tr>
+            </table>        
+        </form>        
+        
+    </div>
+</body>
+
+<link rel="stylesheet" type="text/css" href="../css/main.css">
+
+<style>    
+    #title {
+        width: wrap;
+        text-align: center;
+        font-weight: bold;
+    }
+    
+    #buttons,#team,#title {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+</style>
+
+<script>    
+    var ws;
+    
+    var ip;//TODO: Move 
+    
+    if(!lsCheck() || localStorage.getItem("UUID")==null)
+        window.location.href = "../";
+    
+    if(localStorage.getItem("ACTIVE")!=null) {
+        localStorage.removeItem("ACTIVE");
+    }
+    
+    
+    function lsCheck() {
+        try {
+            localStorage.setItem("FOO","BAR");
+            localStorage.removeItem("FOO");
+            return true;
+        }catch(e) {
+            alert("Sorry, your browser is not compatible with this app. "+e);
+            return false;
+        }
+    }
+    
+    
+    function loadTeam(mode) {
+        if(ip!=null) {
+            ws = new WebSocket("ws://"+ip);
+        } else {
+            ws = new WebSocket("ws://169.254.109.67:2739/");
+        }
+
+        ws.onopen = function() {
+        };
+
+        ws.onmessage = function (evt) {
+            if(evt.data=="Hello") {
+                //TODO: Create uuid+query obj, return new uuid and data (only if edit) & open in new tab
+                var query = {"TYPE":"QUERY",
+                             "UUID":localStorage.getItem("UUID"),
+                             "TEAM":document.getElementById("team").value};
+                ws.send(JSON.stringify(query));
+            } else if(evt.data.indexOf("TEAM:")==0) {
+                var teamData = JSON.parse(evt.data.substring("TEAM:".length));//TODO: ToUpCase
+                if(teamData==null) {
+                    alert("No data for "+document.getElementById("team").value);
+                    if(mode=="view") {
+                        document.getElementById("team").value="";
+                    } else if(mode=="edit") {
+                        var newTeam = {"TEAM":document.getElementById("team").value};
+                        localStorage.setItem("ACTIVE",JSON.stringify(newTeam));
+                        window.location.href = "../"+mode;
+                    }
+                } else {
+                    localStorage.setItem("ACTIVE",JSON.stringify(teamData));
+                    window.location.href = "../"+mode;
+                }
+            } else if(evt.data=="LOGOUT") {
+                alert("The server has been restarted, you will need to log in again.");
+                    window.location.href = "../";
+            }
+        };
+
+        ws.onclose = function() {
+        };
+
+        ws.onerror = function(err) {
+        };
+    };   
+    
+    document.getElementById("view").onclick = function() {
+        loadTeam("view");
+    };    
+    
+    document.getElementById("edit").onclick = function() {
+        loadTeam("edit");
+    };
+    
+//document.getElementById("server").value = "<Automatic>";//TODO: Save in db on submit
+    
+</script>

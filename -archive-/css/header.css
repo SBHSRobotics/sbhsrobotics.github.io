@@ -1,0 +1,114 @@
+.body{
+    background-image: url("../media/site-background.jpg");
+	margin-left: 5px;
+	margin-right: 5px;
+	overflow-x:scroll; 
+	overflow-y:scroll; 
+	max-width: 100%;
+}
+
+.announcement{
+	text-align: center;
+}
+
+.body img{
+    max-width: 100%
+    opacity: 1.0;
+}
+
+
+.box h2,h3{
+    text-align: center;
+    padding: 5px;
+    opacity: 1.0;
+
+}
+
+.box p,iframe{
+    padding: 8px;
+}
+
+.nav{
+	background-color: #222222;
+	margin-right: -10px;
+	margin-left: -10px;
+	padding-right:15px;
+	padding-left:15px;
+	color: black;
+	border: solid 3px #FAD854;
+    overflow: nowrap;
+}
+
+
+.nav li{
+    min-width: 80px;
+	width: 12%;
+	text-align: center;
+}
+
+.nav a{
+    font-weight: bold;
+    color: white;
+    //text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
+}
+
+.content {
+    width:100%-10px;
+    margin-top:-10px;
+    margin-right: 20px;
+    margin-left: 20px;
+    background-color:#ffffff;
+    word-wrap:break-word;
+    white-space:normal;
+    background-color: lightgrey;
+    border: none;
+    position: relative;
+    top: 20px;
+    border-radius:10px;
+    box-shadow: -3px 3px 8px lightgrey;
+    padding: 30px;
+}
+
+.content td{
+    border: solid thin black;
+    text-align: center;
+}
+
+.cimg {
+    width: 60%;
+    display: block;
+    margin: 10px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.carousel {
+    padding: 10px;
+    margin-top:10px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 70%;
+    text-align: center;
+}
+
+@media (max-width:830px) {
+    .nav-header img{
+        display: none;
+    }
+
+    .nav-header a img{
+        display: block;
+        margin-right: auto;
+        margin-left: auto;
+    }
+}
+
+@media (max-width:750px) {
+
+    .nav{
+        display: fixed;
+        margin: auto;
+        width: 130px;
+        height: 100%;
+    }
+}
