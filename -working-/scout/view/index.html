@@ -1,0 +1,73 @@
+<head>
+    <title>ScoutNet Login</title>
+<!--    TODO: Favicon and logo-->
+</head>
+
+<body>
+    <input type="button" id="back" class="button" name="back" value="Back" />
+    <table id="display" class="box">  
+        
+    </table>
+</body>
+
+<link rel="stylesheet" type="text/css" href="../css/main.css">
+
+<style>        
+    #display label,p,td,tr {
+        font-family: sans-serif;
+        padding: 5px;
+        width=wrap;
+    }
+</style>
+
+<script src="../teamData.js" ></script>
+
+<script>       
+    var data = JSON.parse(localStorage.getItem("ACTIVE"));
+    
+    if(!lsCheck || data==null) {
+        window.location.href = "../search";
+    }
+    
+    var display = document.getElementById("display");
+    
+    for(var key in dataTemplate) {
+        if(key=="VERSION" || data[key]==null)
+            continue;
+
+        var row = document.createElement("tr");
+        var left = document.createElement("td");
+        var right = document.createElement("td");
+        
+        var label = document.createElement("label");
+        var value = document.createElement("p");
+        
+        label.appendChild(document.createTextNode(key+": "));
+        value.appendChild(document.createTextNode(data[key]));
+        
+        left.appendChild(label);
+        right.appendChild(value);
+        
+        row.appendChild(left);
+        row.appendChild(right);
+        
+        display.appendChild(row);
+    }
+    
+    
+    function lsCheck() {
+        try {
+            localStorage.setItem("FOO","BAR");
+            localStorage.removeItem("FOO");
+            return true;
+        }catch(e) {
+            alert("Sorry, your browser is not compatible with this app. "+e);
+            return false;
+        }
+    }
+    
+    document.getElementById("back").onclick = function() {
+        window.location.href = "../search";
+    };
+    
+</script>

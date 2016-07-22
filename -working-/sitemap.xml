@@ -1,0 +1,33 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url>
+<loc>http://sbrobotics.ml/home/</loc>
+</url>
+<url>
+<loc>http://sbrobotics.ml/updates/</loc>
+</url>
+<url>
+<loc>http://sbrobotics.ml/teams/</loc>
+</url>
+<url>
+<loc>http://sbrobotics.ml/about/</loc>
+</url>
+<url>
+<loc>http://sbrobotics.ml/aboutvex/</loc>
+</url>
+<url>
+<loc>http://sbrobotics.ml/contact/</loc>
+</url>
+<url>
+<loc>http://sbrobotics.ml/search/</loc>
+</url>
+<url>
+<loc>http://sbrobotics.ml/error/404/</loc>
+</url>
+<url>
+<loc>http://sbrobotics.ml/error/403/</loc>
+</url>
+<url>
+<loc>http://sbrobotics.ml/error/500/</loc>
+</url>
+</urlset>
