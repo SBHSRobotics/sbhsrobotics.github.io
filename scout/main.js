@@ -29,12 +29,15 @@ function ScoutNet() {
     this.signOutButton = document.getElementById('sign-out');
     this.teamDropdown = document.getElementById('sel');
     this.addButton = document.getElementById('add');
-    this.editButton = document.getElementById('edit');
-    this.snackbar = document.getElementById('snackbar');
+    this.deleteButton = document.getElementById('delete');
+    this.dataTable = document.getElementById('data');
 
     this.signOutButton.addEventListener('click', this.signOut.bind(this));
     this.signInButton.addEventListener('click', this.signIn.bind(this));
     this.addButton.addEventListener('click', this.createTeam.bind(this));
+    this.deleteButton.addEventListener('click', this.deleteTeam.bind(this));
+    
+    this.teamDropdown.addEventListener('change', this.displaySelectedTeam.bind(this));
     
     //toastr setup
     toastr.options = {
@@ -81,24 +84,53 @@ ScoutNet.prototype.initFirebase = function () {
     this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this));
 }
 
+// UI functions:
+
 ScoutNet.prototype.createTeam = function (e) {
     e.preventDefault();
     var team = { name: window.prompt("Enter a Team Name") };
     if (team.name) {
-        this.saveTeam(e, team);
+        this.saveTeam(team);
     }
 }
 
+ScoutNet.prototype.deleteTeam = function(e) {
+    e.preventDefault();
+    if(this.selectedTeam && window.confirm("Are you sure you would like to delete team " + this.selectedTeam + "?")) {
+        this.removeSelectedTeam();
+    }
+}
+
+ScoutNet.prototype.unloadTeams = function() { 
+    this.teams = {};
+    while(this.teamDropdown.lastChild) {
+        this.teamDropdown.removeChild(this.teamDropdown.lastChild);
+    }
+    
+    this.dataTable.setAttribute('hidden', true);
+    
+    var op = document.createElement('option');
+    op.textContent = "Select a team...";
+    this.teamDropdown.appendChild(op);
+}
+
 ScoutNet.prototype.loadTeams = function () {
+    if (!this.database) {
+        ScoutNet.prototype.loadTeams();
+        return;
+    }
     this.teamsRef = this.database.ref('teams');
     this.teamsRef.off();
-
+    
+    this.unloadTeams();
+    
     var addTeam = function (data) {
         var val = data.val();
         this.addTeam(data.key, val.name);
     }.bind(this);
     this.teamsRef.on('child_added', addTeam);
-    this.teamsRef.on('child_changed', addTeam);
+    this.teamsRef.on('child_changed', this.loadTeams.bind(this));
+    this.teamsRef.on('child_removed', this.loadTeams.bind(this));
 };
 
 ScoutNet.prototype.addTeam = function (key, value) {
@@ -108,9 +140,46 @@ ScoutNet.prototype.addTeam = function (key, value) {
     this.teamDropdown.appendChild(op);
 }
 
+// Displays a Message in the UI.
+ScoutNet.prototype.displaySelectedTeam = function () {
+    this.selectedTeam = this.teamDropdown.options[this.teamDropdown.selectedIndex].text;
+    
+    var table = this.dataTable;
+    table.removeAttribute('hidden');
+    
+     while(table.childNodes[2]) {
+        table.removeChild(table.lastChild);
+    }
+    var displayTeam = function(data) {
+        var team = data.val();
+        for (var prop in team) {
+            if (prop != 'user' && prop != 'timestamp') {
+                var row = document.createElement('tr');
+                var attr = document.createElement('td');
+                var value = document.createElement('td');
+                
+                attr.textContent = prop;
+                value.textContent= team[prop];
+                
+                row.appendChild(attr);
+                row.appendChild(value);
+                
+                attr.className = "table-cell";
+                value.className = "table-cell";
+                
+                table.appendChild(row);
+            }
+        }
+    }
+    
+    this.teamsRef.orderByChild("name").equalTo(this.selectedTeam).on("child_added", displayTeam);
+};
+
+// DB functions
+
 // Saves a new team on the Firebase DB.
-ScoutNet.prototype.saveTeam = function (event, team) {
-    if (this.checkSignedInWithMessage()) {
+ScoutNet.prototype.saveTeam = function (team) {
+    if (this.checkSignedIn()) {
         var currentUser = this.auth.currentUser;
         if (ScoutNet.teams[team.name]) {
             window.alert("Team " + team.name + " already exists!");
@@ -129,73 +198,90 @@ ScoutNet.prototype.saveTeam = function (event, team) {
     }
 };
 
-// Sets the URL of the given img element with the URL of the image stored in Firebase Storage.
-ScoutNet.prototype.setImageUrl = function (imageUri, imgElement) {
-    // If the image is a Firebase Storage URI we fetch the URL.
-    if (imageUri.startsWith('gs://')) {
-        imgElement.src = ScoutNet.LOADING_IMAGE_URL; // Display a loading image first.
-        this.storage.refFromURL(imageUri).getMetadata().then(function (metadata) {
-            imgElement.src = metadata.downloadURLs[0];
-        });
-    } else {
-        imgElement.src = imageUri;
+ScoutNet.prototype.removeSelectedTeam = function () {
+    
+    var teamsRef = this.database.ref('teams');
+    
+    var removeTeam = function(data) {
+        var teamRef = teamsRef.child(data.key);
+
+        teamRef.remove()
+            .then(function () {
+                window.alert("Team deleted.");
+            })
+            .catch(function (err) {
+                window.alert("Error deleting team");
+            });
     }
-};
+    
+    teamsRef.orderByChild("name").equalTo(this.selectedTeam).on("child_added", removeTeam);
+}
 
-// Saves a new message containing an image URI in Firebase.
-// This first saves the image in Firebase storage.
-ScoutNet.prototype.saveTeamImage = function (event) {
-    var file = event.target.files[0];
-
-    // Clear the selection in the file picker input.
-//    this.imageForm.reset();
-
-    // Check if the file is an image.
-    if (!file.type.match('image.*')) {
-        var data = {
-            message: 'You can only add images',
-            timeout: 2000
-        };
-        this.snackbar.MaterialSnackbar.showSnackbar(data);
-        return;
-    }
-
-    // Check if the user is signed-in
-    if (this.checkSignedInWithMessage()) {
-
-        // We add a message with a loading icon that will get updated with the shared image.
-        
-        currentUser = this.auth.currentUser;
-//        this.messagesRef.push({
-//            name: currentUser.displayName,
-//            imageUrl: ScoutNet.LOADING_IMAGE_URL,
-//            photoUrl: currentUser.photoURL || '/images/profile_placeholder.png'
-//        }).then(function (data) {
 //
-//            // Upload the image to Firebase Storage.
-//            var uploadTask = this.storage.ref(currentUser.uid + '/' + Date.now() + '/' + file.name)
-//                    .put(file, {'contentType': file.type});
-//            // Listen for upload completion.
-//            uploadTask.on('state_changed', null, function (error) {
-//                console.error('There was an error uploading a file to Firebase Storage:', error);
-//            }, function () {
+//// Sets the URL of the given img element with the URL of the image stored in Firebase Storage.
+//ScoutNet.prototype.setImageUrl = function (imageUri, imgElement) {
+//    // If the image is a Firebase Storage URI we fetch the URL.
+//    if (imageUri.startsWith('gs://')) {
+//        imgElement.src = ScoutNet.LOADING_IMAGE_URL; // Display a loading image first.
+//        this.storage.refFromURL(imageUri).getMetadata().then(function (metadata) {
+//            imgElement.src = metadata.downloadURLs[0];
+//        });
+//    } else {
+//        imgElement.src = imageUri;
+//    }
+//};
 //
-//                // Get the file's Storage URI and update the chat message placeholder.
-//                var filePath = uploadTask.snapshot.metadata.fullPath;
-//                data.update({imageUrl: this.storage.ref(filePath).toString()});
-//            }.bind(this));
-//        }.bind(this));
-    }
-};
+//// Saves a new message containing an image URI in Firebase.
+//// This first saves the image in Firebase storage.
+//ScoutNet.prototype.saveTeamImage = function (event) {
+//    var file = event.target.files[0];
+//
+//    // Clear the selection in the file picker input.
+////    this.imageForm.reset();
+//
+//    // Check if the file is an image.
+//    if (!file.type.match('image.*')) {
+//
+//    }
+//
+//    // Check if the user is signed-in
+//    if (this.checkSignedIn()) {
+//
+//        // We add a message with a loading icon that will get updated with the shared image.
+//        
+//        currentUser = this.auth.currentUser;
+////        this.messagesRef.push({
+////            name: currentUser.displayName,
+////            imageUrl: ScoutNet.LOADING_IMAGE_URL,
+////            photoUrl: currentUser.photoURL || '/images/profile_placeholder.png'
+////        }).then(function (data) {
+////
+////            // Upload the image to Firebase Storage.
+////            var uploadTask = this.storage.ref(currentUser.uid + '/' + Date.now() + '/' + file.name)
+////                    .put(file, {'contentType': file.type});
+////            // Listen for upload completion.
+////            uploadTask.on('state_changed', null, function (error) {
+////                console.error('There was an error uploading a file to Firebase Storage:', error);
+////            }, function () {
+////
+////                // Get the file's Storage URI and update the chat message placeholder.
+////                var filePath = uploadTask.snapshot.metadata.fullPath;
+////                data.update({imageUrl: this.storage.ref(filePath).toString()});
+////            }.bind(this));
+////        }.bind(this));
+//    }
+//};
 
-// Signs-in Friendly Chat.
+// Auth functions
+
+// Signs-in
 ScoutNet.prototype.signIn = function () {
     // Sign in Firebase using popup auth and Google as the identity provider.
     var provider = new firebase.auth.GoogleAuthProvider();
     this.auth.signInWithPopup(provider);
 };
 
-// Signs-out of Friendly Chat.
+// Signs-out
 ScoutNet.prototype.signOut = function () {
     // Sign out of Firebase.
     this.auth.signOut();
@@ -204,6 +290,10 @@ ScoutNet.prototype.signOut = function () {
 // Triggers when the auth state change for instance when the user signs-in or signs-out.
 ScoutNet.prototype.onAuthStateChanged = function (user) {
     if (user) { // User is signed in!
+        this.teams = {};
+        while(this.teamDropdown.firstChild) {
+            this.teamDropdown.removeChild(this.teamDropdown.firstChild);
+        }
         // Get profile pic and user's name from the Firebase user object.
         var profilePicUrl = user.photoURL;
         var userName = user.displayName;
@@ -225,17 +315,19 @@ ScoutNet.prototype.onAuthStateChanged = function (user) {
         
         // Enable
         this.addButton.removeAttribute('disabled');
-        this.editButton.removeAttribute('disabled');
+        this.deleteButton.removeAttribute('disabled');
         this.teamDropdown.removeAttribute('disabled');
         toastr.clear();
     } else { // User is signed out!
+        this.unloadTeams();
+        
         // Hide user's profile and sign-out button.
         this.userName.setAttribute('hidden', 'true');
         this.userPic.setAttribute('hidden', 'true');
         this.signOutButton.setAttribute('hidden', 'true');
         
         this.addButton.setAttribute('disabled', true);
-        this.editButton.setAttribute('disabled', true);
+        this.deleteButton.setAttribute('disabled', true);
         this.teamDropdown.setAttribute('disabled', true);
 
         // Show sign-in button.
@@ -248,31 +340,13 @@ ScoutNet.prototype.onAuthStateChanged = function (user) {
     
 };
 
-ScoutNet.prototype.mustSignIn = function (e) {
-    alert(this.nav.children[this.signInButton]);
-//    alert("You must sign in to use this app!");
-}
-
 // Returns true if user is signed-in. Otherwise false and displays a message.
-ScoutNet.prototype.checkSignedInWithMessage = function () {
+ScoutNet.prototype.checkSignedIn = function () {
     // Return true if the user is signed in Firebase
     if (this.auth.currentUser) {
         return true;
     }
-
-    // Display a message to the user using a Toast.
-    var data = {
-        message: 'You must sign-in first',
-        timeout: 2000
-    };
-    this.snackbar.MaterialSnackbar.showSnackbar(data);
     return false;
-};
-
-// Resets the given MaterialTextField.
-ScoutNet.resetMaterialTextfield = function (element) {
-    element.value = '';
-    element.parentNode.MaterialTextfield.boundUpdateClassesHandler();
 };
 
 // Template for messages.
@@ -286,50 +360,6 @@ ScoutNet.TEAM_TEMPLATE =
 // A loading image URL.
 ScoutNet.LOADING_IMAGE_URL = 'https://www.google.com/images/spin-32.gif';
 
-// Displays a Message in the UI.
-ScoutNet.prototype.displayTeam = function (key, name) {
-//    var div = document.getElementById(key);
-//    // If an element for that message does not exists yet we create it.
-//    if (!div) {
-//        var container = document.createElement('div');
-//        container.innerHTML = FriendlyChat.MESSAGE_TEMPLATE;
-//        div = container.firstChild;
-//        div.setAttribute('id', key);
-//        this.messageList.appendChild(div);
-//    }
-//    if (picUrl) {
-//        div.querySelector('.pic').style.backgroundImage = 'url(' + picUrl + ')';
-//    }
-//    div.querySelector('.name').textContent = name;
-//    var messageElement = div.querySelector('.message');
-//    if (text) { // If the message is text.
-//        messageElement.textContent = text;
-//        // Replace all line breaks by <br>.
-//        messageElement.innerHTML = messageElement.innerHTML.replace(/\n/g, '<br>');
-//    } else if (imageUri) { // If the message is an image.
-//        var image = document.createElement('img');
-//        image.addEventListener('load', function () {
-//            this.messageList.scrollTop = this.messageList.scrollHeight;
-//        }.bind(this));
-//        this.setImageUrl(imageUri, image);
-//        messageElement.innerHTML = '';
-//        messageElement.appendChild(image);
-//    }
-//    // Show the card fading-in and scroll to view the new message.
-//    setTimeout(function () {div.classList.add('visible')}, 1);
-//    this.messageList.scrollTop = this.messageList.scrollHeight;
-//    this.messageInput.focus();
-};
-
-// Enables or disables the submit button depending on the values of the input
-// fields.
-ScoutNet.prototype.toggleButton = function () {
-    if (this.checkSignedInWithMessage()) {
-        this.editButton.removeAttribute('disabled');
-    } else {
-        this.editButton.setAttribute('disabled', 'true');
-    }
-};
 
 // Checks that the Firebase SDK has been correctly setup and configured.
 ScoutNet.prototype.checkSetup = function () {

@@ -96,6 +96,9 @@ html, body {
   position: relative;
 }
 
+.toast {
+    bottom: 10px;
+}
 
 .button, select{
     font-size: 20px;
@@ -109,4 +112,21 @@ html, body {
 .box {
     padding: 5%;
     background-color: #424242;
+}
+
+.table-head {
+    font: 'Droid Sans';
+    font-size: 22px;
+    color: whitesmoke;
+    padding: 10px;
+}
+
+.table-cell {
+    font: 'Droid Sans';
+    font-size: 18px;
+    font-weight: 300;
+    color: whitesmoke;
+    border: solid 1px #828282;
+    padding: 10px;
+    margin-left: 10px;
 }
