@@ -112,6 +112,7 @@ html, body {
 .box {
     padding: 5%;
     background-color: #424242;
+    overflow-x: scroll;
 }
 
 .table-head {
@@ -130,6 +131,7 @@ html, body {
     border: solid 1px #828282;
     padding: 10px;
     margin-left: 10px;
+    text-overflow: ellipsis;
 }
 
 .table-input {
@@ -139,5 +141,6 @@ html, body {
     color: whitesmoke;
     background-color: #424242;
     border: none;
+    text-overflow: ellipsis;
 }
 
