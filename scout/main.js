@@ -206,7 +206,7 @@ ScoutNet.prototype.displaySelectedTeam = function (teamName = undefined) {
                 
                 table.appendChild(row);
             }
-        });
+        }.bind(this));
     }
     
     this.teamsRef.orderByChild("name").equalTo(this.selectedTeam).on("child_added", displayTeam.bind(this));
