@@ -31,32 +31,20 @@ function ScoutNet() {
     this.addButton = document.getElementById('add');
     this.deleteButton = document.getElementById('delete');
     this.dataTable = document.getElementById('data');
-
+    
+    $.getJSON( "teamData.json", function(data) {
+        this.dataTemplate = data;
+    }.bind(this))
+    .error(function () {
+        window.alert("Error loading data template. Please contact database admin.");
+    });
+        
     this.signOutButton.addEventListener('click', this.signOut.bind(this));
     this.signInButton.addEventListener('click', this.signIn.bind(this));
     this.addButton.addEventListener('click', this.createTeam.bind(this));
     this.deleteButton.addEventListener('click', this.deleteTeam.bind(this));
     
     this.teamDropdown.addEventListener('change', this.displaySelectedTeam.bind(this));
-    
-    //toastr setup
-    toastr.options = {
-      "closeButton": false,
-      "debug": false,
-      "newestOnTop": false,
-      "progressBar": false,
-      "positionClass": "toast-bottom-center",
-      "preventDuplicates": false,
-      "onclick": null,
-      "showDuration": "-1",
-      "hideDuration": "-1",
-      "timeOut": "-1",
-      "extendedTimeOut": "-1",
-      "showEasing": "swing",
-      "hideEasing": "linear",
-      "showMethod": "fadeIn",
-      "hideMethod": "fadeOut"
-    }
 
 
 //    this.editButton.addEventListener('keyup', buttonTogglingHandler);
@@ -101,13 +89,15 @@ ScoutNet.prototype.deleteTeam = function(e) {
     }
 }
 
-ScoutNet.prototype.unloadTeams = function() { 
+ScoutNet.prototype.unloadTeams = function() {
+    $(this.dataTable).fadeOut();
+    this.dataTable.setAttribute('hidden', true);
+    
     this.teams = {};
     while(this.teamDropdown.lastChild) {
         this.teamDropdown.removeChild(this.teamDropdown.lastChild);
     }
     
-    this.dataTable.setAttribute('hidden', true);
     
     var op = document.createElement('option');
     op.textContent = "Select a team...";
@@ -122,11 +112,16 @@ ScoutNet.prototype.loadTeams = function () {
     this.teamsRef = this.database.ref('teams');
     this.teamsRef.off();
     
-    this.unloadTeams();
+    this.unloadTeams.bind(this)();
     
     var addTeam = function (data) {
         var val = data.val();
         this.addTeam(data.key, val.name);
+        if (this.selectedTeam) {
+            if (this.selectedTeam == val.name) {
+                this.displaySelectedTeam.bind(this)(val.name);
+            }
+        }
     }.bind(this);
     this.teamsRef.on('child_added', addTeam);
     this.teamsRef.on('child_changed', this.loadTeams.bind(this));
@@ -141,38 +136,81 @@ ScoutNet.prototype.addTeam = function (key, value) {
 }
 
 // Displays a Message in the UI.
-ScoutNet.prototype.displaySelectedTeam = function () {
-    this.selectedTeam = this.teamDropdown.options[this.teamDropdown.selectedIndex].text;
+ScoutNet.prototype.displaySelectedTeam = function (teamName = undefined) {
+    if (!teamName || typeof(teamName) != typeof('')) {
+        console.log(teamName);
+        this.selectedTeam = this.teamDropdown.options[this.teamDropdown.selectedIndex].text;
+    }
     
     var table = this.dataTable;
+    $(table).fadeIn();
     table.removeAttribute('hidden');
     
      while(table.childNodes[2]) {
         table.removeChild(table.lastChild);
     }
+    
     var displayTeam = function(data) {
         var team = data.val();
-        for (var prop in team) {
+        
+        for (var prop in this.dataTemplate) {//TODO: why is this null?
+            if (!team[prop]) {
+//                console.log("Adding missing property " + prop + " to team " + team.name);
+                team[prop] = "";
+            }
+        }
+        
+        
+        var keys = Object.keys(team).sort(function (a, b) {
+            if (a == 'name') {
+                return -1;
+            } else if (b == 'name') {
+                return 1;
+            }
+            return a.toLowerCase().localeCompare(b.toLowerCase());
+        });
+        
+        console.log(keys);
+        
+        keys.forEach(function (prop) {
             if (prop != 'user' && prop != 'timestamp') {
                 var row = document.createElement('tr');
                 var attr = document.createElement('td');
                 var value = document.createElement('td');
+                var input = document.createElement('input');
                 
-                attr.textContent = prop;
-                value.textContent= team[prop];
+                attr.textContent = prop.toUpperCase();
+                input.value = team[prop];
+                value.appendChild(input);
+                
+                const property = prop;
+                const val = input;
+
+                var change = function() {
+                    var changes = {};
+                    console.log(val.value);
+                    changes[property] = val.value;
+//                    changes['user'] = this.auth.currentUser;
+//                    changes['timestamp'] = new Date();
+                    console.log(changes);
+                    this.updateSelectedTeam.bind(this)(changes);
+                }
+                value.addEventListener('change', change.bind(this));
                 
                 row.appendChild(attr);
                 row.appendChild(value);
                 
                 attr.className = "table-cell";
                 value.className = "table-cell";
+                input.className = "table-input";
                 
                 table.appendChild(row);
             }
-        }
+        });
     }
     
-    this.teamsRef.orderByChild("name").equalTo(this.selectedTeam).on("child_added", displayTeam);
+    this.teamsRef.orderByChild("name").equalTo(this.selectedTeam).on("child_added", displayTeam.bind(this));
+    this.teamsRef.orderByChild("name").equalTo(this.selectedTeam).on("child_changed", displayTeam.bind(this));
 };
 
 // DB functions
@@ -182,7 +220,7 @@ ScoutNet.prototype.saveTeam = function (team) {
     if (this.checkSignedIn()) {
         var currentUser = this.auth.currentUser;
         if (ScoutNet.teams[team.name]) {
-            window.alert("Team " + team.name + " already exists!");
+            toastr.error("Team " + team.name + " already exists!");
             return;
         }
         this.teamsRef.push({
@@ -190,13 +228,36 @@ ScoutNet.prototype.saveTeam = function (team) {
             name: team.name,
             timestamp: Date.now()
         }).then(function () {
-            window.alert("Team " + team.name + " created!");
+//            window.alert("Team " + team.name + " created!");
+            toastr.success("Team " + team.name + " created!")
         }.bind(this)).catch(function (error) {
             console.error('Error writing new team to Firebase Database', error);
-            window.Error("Error creating team");
+            toastr.error("Error creating team");
         });
     }
 };
+
+ScoutNet.prototype.updateSelectedTeam = function (props) {
+    if (this.checkSignedIn()) {
+        var teamsRef = this.database.ref('teams');
+
+        var updateTeam = function(data) {
+            var teamRef = teamsRef.child(data.key);
+
+            console.log(props);
+            
+            teamRef.update(props)
+                .then(function () {
+                    toastr.success("Changes saved");
+                })
+                .catch(function (err) {
+                    toastr.error("Error editing team");
+                });
+        }
+
+        teamsRef.orderByChild("name").equalTo(this.selectedTeam).on("child_added", updateTeam);
+    }
+}
 
 ScoutNet.prototype.removeSelectedTeam = function () {
     
@@ -207,10 +268,10 @@ ScoutNet.prototype.removeSelectedTeam = function () {
 
         teamRef.remove()
             .then(function () {
-                window.alert("Team deleted.");
+                toastr.success("Team deleted.");
             })
             .catch(function (err) {
-                window.alert("Error deleting team");
+                toastr.error("Error deleting team");
             });
     }
     
@@ -317,6 +378,26 @@ ScoutNet.prototype.onAuthStateChanged = function (user) {
         this.addButton.removeAttribute('disabled');
         this.deleteButton.removeAttribute('disabled');
         this.teamDropdown.removeAttribute('disabled');
+        
+            //toastr signed in setup
+            toastr.options = {
+              "closeButton": true,
+              "debug": false,
+              "newestOnTop": false,
+              "progressBar": false,
+              "positionClass": "toast-bottom-center",
+              "preventDuplicates": false,
+              "onclick": null,
+              "showDuration": "3000",
+              "hideDuration": "3000",
+              "timeOut": "3000",
+              "extendedTimeOut": "3000",
+              "showEasing": "swing",
+              "hideEasing": "linear",
+              "showMethod": "fadeIn",
+              "hideMethod": "fadeOut"
+            }
+        
         toastr.clear();
     } else { // User is signed out!
         this.unloadTeams();
@@ -333,6 +414,25 @@ ScoutNet.prototype.onAuthStateChanged = function (user) {
         // Show sign-in button.
         this.signInButton.removeAttribute('hidden');
 
+            //toastr signed out setup
+            toastr.options = {
+              "closeButton": false,
+              "debug": false,
+              "newestOnTop": false,
+              "progressBar": false,
+              "positionClass": "toast-bottom-center",
+              "preventDuplicates": false,
+              "onclick": null,
+              "showDuration": "-1",
+              "hideDuration": "-1",
+              "timeOut": "-1",
+              "extendedTimeOut": "-1",
+              "showEasing": "swing",
+              "hideEasing": "linear",
+              "showMethod": "fadeIn",
+              "hideMethod": "fadeOut"
+            }
+        
         toastr.error('You must sign in');
 
     }

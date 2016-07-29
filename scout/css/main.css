@@ -121,12 +121,23 @@ html, body {
     padding: 10px;
 }
 
-.table-cell {
+.table-cell, table-input {
     font: 'Droid Sans';
     font-size: 18px;
     font-weight: 300;
     color: whitesmoke;
+    background-color: #424242;
     border: solid 1px #828282;
     padding: 10px;
     margin-left: 10px;
 }
+
+.table-input {
+    font: 'Droid Sans';
+    font-size: 18px;
+    font-weight: 300;
+    color: whitesmoke;
+    background-color: #424242;
+    border: none;
+}
+
