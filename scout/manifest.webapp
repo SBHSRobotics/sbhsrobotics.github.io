@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "name": "ScoutNet",
+  "launch_path": "/index.html",
+  "description": "Scouting database for alliance-based robotics competitions",
+  "developer": {
+    "name": "Mikel Matticoli",
+    "url": "https://matticoli.github.io"
+  },
+  "installs_allowed_from": [
+    "*"
+  ],
+  "default_locale": "en",
+  "permissions": {
+  },
+  "locales": {
+    "en": {
+      "name": "ScoutNet",
+      "description": "Scouting database for alliance-based robotics competitions"
+    }
+  }
+}

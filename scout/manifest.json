@@ -1,0 +1,7 @@
+{
+  "name": "ScoutNet",
+  "short_name": "ScoutNet",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "portrait"
+}

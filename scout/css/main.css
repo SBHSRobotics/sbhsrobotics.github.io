@@ -1,0 +1,148 @@
+/**
+ * Copyright 2015 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+html, body {
+  font-family: 'Roboto', 'Helvetica', sans-serif;
+  display: block;
+  color: white;
+  background-color: #303030;
+  margin-top: 6em;
+  overflow-x: hidden;
+}
+.material-icons {
+  font-size: 36px;
+  top: 8px;
+  position: relative;
+}
+#user-container {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  top: 0px;
+  width: 100%;
+  right: 0px;
+  justify-content: flex-end;
+  box-shadow: 0px 2px 2px grey;
+  padding: 10px;
+  color: white;
+  background-color: #212121;
+}
+#user-container #logo {
+    margin-right: auto;
+}
+#user-container #user-pic {
+  top:0px;
+  position: relative;
+  display: inline-block;
+  background-image: url('/images/profile_placeholder.png');
+  background-repeat: no-repeat;
+  width: 40px;
+  height: 40px;
+  background-size: 40px;
+  border-radius: 20px;
+}
+#user-container #user-name {
+  font-size: 16px;
+  line-height: 36px;
+  padding-right: 10px;
+  padding-left: 20px;
+}
+
+@media screen and (max-width: 610px) {
+  header {
+    height: 113px;
+    padding-bottom: 80px !important;
+  }
+  #user-container {
+    top: 0px;
+    height: 38px;
+    padding-top: 3px;
+    padding-right: 2px;
+  }
+  #user-container #user-pic {
+    top: 2px;
+    width: 33px;
+    height: 33px;
+    background-size: 33px;
+  }
+}
+
+#user-container .material-icons {
+    top: -2px;
+    position: relative;
+}
+
+#nav .material-icons {
+    top: 0px;
+    position: relative;
+}
+
+#app .material-icons {
+  font-size: 20px;
+  top: 0px;
+  position: relative;
+}
+
+.toast {
+    bottom: 10px;
+}
+
+.button, select{
+    font-size: 20px;
+    background-color: #828282;
+    border: solid 3px #828282;
+    border-radius: 3px;
+    height: wrap;
+}
+
+
+.box {
+    padding: 5%;
+    background-color: #424242;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+}
+
+.table-head {
+    font: 'Droid Sans';
+    font-size: 22px;
+    color: whitesmoke;
+    padding: 10px;
+}
+
+.table-cell, table-input {
+    font: 'Droid Sans';
+    font-size: 18px;
+    font-weight: 300;
+    color: whitesmoke;
+    background-color: #424242;
+    border: solid 1px #828282;
+    padding: 10px;
+    margin-left: 10px;
+}
+
+.table-input {
+    font: 'Droid Sans';
+    font-size: 18px;
+    font-weight: 300;
+    color: whitesmoke;
+    background-color: #424242;
+    border: none;
+}
+
