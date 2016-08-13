@@ -1,6 +1,16 @@
 {
   "rules": {
-    ".read": "root.child('users').child(auth.uid).val() === true",
-    ".write": "root.child('users').child(auth.uid).val() === true"
+    "teams": { 
+        ".read": "root.child('users').child(auth.uid).val() === true",
+        ".write": "root.child('users').child(auth.uid).val() === true"
+    },
+    "users": {
+        ".read": "root.child('admins').child(auth.uid).val() === true",
+        ".write": "root.child('admins').child(auth.uid).val() === true"
+    },
+    "admins": {
+        ".read": "false",
+        ".write": "false"
+    }
   }
 }
