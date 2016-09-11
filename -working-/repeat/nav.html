@@ -24,12 +24,25 @@
 }
 </style>
 
-<div class="nav-header">
-		<link rel="stylesheet" href="../css/header.css">
 
-			<ul class="nav nav-pills">
-				<li><a href="../home">Home</a></li>
-				<li><a href="../calendar/">Calendar</a></li>
+<nav class="navbar">
+    <div class="container-fluid">
+        <link rel="stylesheet" href="../css/header.css">
+        
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar">-</span>
+                <span class="icon-bar">-</span>
+                <span class="icon-bar">-</span>
+            </button>
+<!--            <a class="navbar-brand" href="#"></a>-->
+        </div>
+        
+        <div class="collapse navbar-collapse" id="navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="../home">Home</a></li>
+                <li><a href="../calendar/">Calendar</a></li>
                 <li class="dropdown">
                   <a class="dropdown" data-toggle="dropdown">About
                     <span class="caret"></span></a>
@@ -38,7 +51,7 @@
                     <li><a href="../aboutvex/">About VEX</a></li>
                   </ul>
                 </li>
-				<li class="dropdown">
+                <li class="dropdown">
                     <a href="../teams/" class="dropdown">Teams
                         <span class="caret"></span</a>
                     <ul class="dropdown-menu">
@@ -48,12 +61,20 @@
                         <li><a href="../750r/">Team R</a></li>
                   </ul>        
                 </li>
-				<li><a href="../contact/">Contact</a></li>
-				<li><a href="../join/">Join</a></li>
-				<li><a href="../scout/">Scout Database</a></li>
-				<li><a href="../crew/">CREW Forums</a>
-			</ul>
+                <li><a href="../contact/">Contact</a></li>
+                <li><a href="../join/">Join</a></li>
+                <li><a href="../scout/">Scout Database</a></li>
+                <li><a href="../crew/">CREW Forums</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+    
+<div class="nav-header">    
+    <a href="http://sbrobotics.ml">
+    <img src="../media/logo.png" align="center" alt="" style="height:160px; position: relative; top: 10px;">
+    </a>
 
-			<a href="http://sbrobotics.ml"><img src="../media/logo.png" align=""center" alt="" style="height:160px; position: relative; top: 10px;"></a>
-			<img src="../media/title.png" alt="South Brunswick High School VEX Robotics Program" style="height:120px"></img>
-		</div>
+    <img src="../media/title.png" alt="South Brunswick High School VEX Robotics Program" style="height:120px"></img>
+</div>
+
