@@ -1,10 +1,7 @@
 .body{
     background-image: url("../media/site-background.jpg");
-	margin-left: 5px;
-	margin-right: 5px;
-	overflow-x:scroll; 
-	overflow-y:scroll; 
-	max-width: 100%;
+/*	overflow-x: scroll; */
+	overflow-y: scroll; 
 }
 
 .announcement{
@@ -28,23 +25,29 @@
     padding: 8px;
 }
 
+.navbar {
+    width: 100%;
+}
+
 .nav{
-	background-color: #222222;
-	margin-right: -10px;
-	margin-left: -10px;
-	padding-right:15px;
-	padding-left:15px;
-	color: black;
-	border: solid 3px #FAD854;
-    overflow: nowrap;
+	background-color: #000000;
+/*	margin-right: -10px;*/
+/*	margin-left: -10px;*/
+/*	padding-right:15px;*/
+/*	padding-left:15px;*/
+/*	border: solid 3px #000000;*/
+/*    box-shadow: 5px 5px;*/
+/*    overflow: nowrap;*/
 }
 
 
+/*
 .nav li{
     min-width: 80px;
 	width: 12%;
 	text-align: center;
 }
+*/
 
 .nav a{
     font-weight: bold;
@@ -53,19 +56,19 @@
 }
 
 .content {
-    width:100%-10px;
+/*    width:100%-10px;*/
     margin-top:-10px;
-    margin-right: 20px;
-    margin-left: 20px;
+/*    margin-right: 20px;*/
+/*    margin-left: 20px;*/
     background-color:#ffffff;
-    word-wrap:break-word;
-    white-space:normal;
+/*    word-wrap:break-word;*/
+/*    white-space:normal;*/
     background-color: lightgrey;
     border: none;
     position: relative;
     top: 20px;
-    border-radius:10px;
-    box-shadow: -3px 3px 8px lightgrey;
+/*    border-radius:10px;*/
+/*    box-shadow: -3px 3px 8px lightgrey;*/
     padding: 30px;
 }
 
@@ -103,6 +106,7 @@
     }
 }
 
+/*
 @media (max-width:750px) {
 
     .nav{
@@ -112,3 +116,4 @@
         height: 100%;
     }
 }
+*/
