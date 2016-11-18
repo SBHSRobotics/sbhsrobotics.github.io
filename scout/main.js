@@ -348,14 +348,50 @@ ScoutNet.prototype.signOut = function () {
     this.auth.signOut();
 };
 
+ScoutNet.prototype.saveUser = function(user) {
+        
+    if (!this.database) {
+        console.log('nope');
+        ScoutNet.prototype.saveUser(user);
+        return;
+    } else {
+        console.log('yup');
+    }
+    
+    var usersRef = this.database.ref('users');
+    
+    usersRef.orderByChild("uid").equalTo(user.uid).on('value', function (snapshot) {//TODO find right user
+        console.log(snapshot.val()-);
+    });
+    
+    
+    usersRef.push({
+        uid: user.uid,
+        name: user.displayName,
+        email: user.email,
+        active: false
+    }).then(function () {
+        toastr.success("Welcome, " + user.displayName + "!")
+    }.bind(this)).catch(function (error) {
+        console.error('Error writing new user to Firebase Database', error);
+        toastr.error("Error saving user");
+    });
+    console.log('done');
+}
+
 // Triggers when the auth state change for instance when the user signs-in or signs-out.
 ScoutNet.prototype.onAuthStateChanged = function (user) {
     if (user) { // User is signed in!
         this.teams = {};
+        
+        this.saveUser.bind(this)(user);
+        
+        
         while(this.teamDropdown.firstChild) {
             this.teamDropdown.removeChild(this.teamDropdown.firstChild);
         }
         // Get profile pic and user's name from the Firebase user object.
+        console.log(user);
         var profilePicUrl = user.photoURL;
         var userName = user.displayName;
 
