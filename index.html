@@ -37,7 +37,43 @@
 
 <body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
 
-    <div w3-include-html="./nav.html"></div>
+    <!-- Navigation Module -->
+    <nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-main-collapse">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <a class="navbar-brand page-scroll" href="#page-top">
+                     <span class="light">SBHS</span> Robotics
+                </a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse navbar-right navbar-main-collapse">
+                <ul class="nav navbar-nav">
+                    <!-- Hidden li included to remove active class from about link when scrolled up past about section -->
+                    <li class="hidden">
+                        <a href="#page-top"></a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#about">About VEX</a>
+                    </li>
+                    <li>
+                        <a class = "page-scroll" href="#news">News</a>    
+                    </li>
+                    <li>
+                        <a class = "page-scroll" href="#resources">CREW Resources</a>    
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#contact">Contact</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
 
     <!-- Intro Header -->
     <header class="intro">
@@ -83,12 +119,14 @@
     
     <!-- News Section -->
     <section id="news" class="container-fluid content-section text-center">
-        <div class="row" style="pointer-events: none;">
-            <h2>News</h2>
-            <div class="col-md-12">
-                <!-- start feedwind code --> <script type="text/javascript" src="https://feed.mikle.com/js/fw-loader.js" data-fw-param="?widget_parameter=%7B%22sources%22%3A%5B%7B%22source%22%3A%22http%3A%2F%2Fsbhsrobotics.blogspot.com%2Ffeeds%2Fposts%2Fdefault%3Falt%3Drss%22%2C%22type%22%3A%22RSS%22%7D%5D%2C%22name%22%3A%22%22%2C%22width%22%3A0%2C%22height%22%3A0%2C%22height_by_article%22%3A%223%22%2C%22target%22%3A%22_blank%22%2C%22font%22%3A%22Verdana%2C%20Arial%2C%20sans-serif%22%2C%22title_font_size%22%3A%2216%22%2C%22item_title_font_size%22%3A%2216%22%2C%22item_description_font_size%22%3A%2212%22%2C%22border%22%3A%22off%22%2C%22css_url%22%3A%22%22%2C%22responsive%22%3A%22on%22%2C%22text_direction%22%3A%22left%22%2C%22text_alignment%22%3A%22center%22%2C%22corner%22%3A%22rounded%22%2C%22scroll%22%3A%22off%22%2C%22auto_scroll%22%3A%22off%22%2C%22auto_scroll_direction%22%3A%22up%22%2C%22auto_scroll_step_speed%22%3A%224%22%2C%22auto_scroll_mc_speed%22%3A%2220%22%2C%22sort%22%3A%22new%22%2C%22title%22%3A%22off%22%2C%22title_sentence%22%3A%22%22%2C%22title_link%22%3A%22%22%2C%22title_bgcolor%22%3A%22%23ffffff%22%2C%22title_color%22%3A%22%23505659%22%2C%22title_bgimage%22%3A%22%22%2C%22item_bgcolor%22%3A%22%23000000%22%2C%22item_bgimage%22%3A%22%22%2C%22item_title_length%22%3A%2255%22%2C%22item_title_color%22%3A%22%23ffffff%22%2C%22item_border_bottom%22%3A%22on%22%2C%22item_description%22%3A%22both%22%2C%22item_link%22%3A%22off%22%2C%22item_description_length%22%3A%22100%22%2C%22item_description_color%22%3A%22%23c1c2c3%22%2C%22item_date%22%3A%22on%22%2C%22item_date_format%22%3A%22%25b%20%25e%2C%20%25Y%20%25l%3A%25M%20%25p%22%2C%22item_date_timezone%22%3A%22%22%2C%22item_description_style%22%3A%22html%22%2C%22item_thumbnail%22%3A%22crop%22%2C%22item_thumbnail_selection%22%3A%22auto%22%2C%22article_num%22%3A%2215%22%2C%22item_player%22%3A%22off%22%2C%22keyword_inc%22%3A%22%22%2C%22keyword_exc%22%3A%22%22%7D"></script> <!-- end feedwind code -->
+        <a href="http://www.sbhsrobotics.blogspot.com">
+            <div class="row" style="pointer-events: none;">
+                <h2>News</h2>
+                <div class="col-md-12">
+                    <!-- start feedwind code --> <script type="text/javascript" src="https://feed.mikle.com/js/fw-loader.js" data-fw-param="?widget_parameter=%7B%22sources%22%3A%5B%7B%22source%22%3A%22http%3A%2F%2Fsbhsrobotics.blogspot.com%2Ffeeds%2Fposts%2Fdefault%3Falt%3Drss%22%2C%22type%22%3A%22RSS%22%7D%5D%2C%22name%22%3A%22%22%2C%22width%22%3A0%2C%22height%22%3A0%2C%22height_by_article%22%3A%223%22%2C%22target%22%3A%22_blank%22%2C%22font%22%3A%22Verdana%2C%20Arial%2C%20sans-serif%22%2C%22title_font_size%22%3A%2216%22%2C%22item_title_font_size%22%3A%2216%22%2C%22item_description_font_size%22%3A%2212%22%2C%22border%22%3A%22off%22%2C%22css_url%22%3A%22%22%2C%22responsive%22%3A%22on%22%2C%22text_direction%22%3A%22left%22%2C%22text_alignment%22%3A%22center%22%2C%22corner%22%3A%22rounded%22%2C%22scroll%22%3A%22off%22%2C%22auto_scroll%22%3A%22off%22%2C%22auto_scroll_direction%22%3A%22up%22%2C%22auto_scroll_step_speed%22%3A%224%22%2C%22auto_scroll_mc_speed%22%3A%2220%22%2C%22sort%22%3A%22new%22%2C%22title%22%3A%22off%22%2C%22title_sentence%22%3A%22%22%2C%22title_link%22%3A%22%22%2C%22title_bgcolor%22%3A%22%23ffffff%22%2C%22title_color%22%3A%22%23505659%22%2C%22title_bgimage%22%3A%22%22%2C%22item_bgcolor%22%3A%22%23000000%22%2C%22item_bgimage%22%3A%22%22%2C%22item_title_length%22%3A%2255%22%2C%22item_title_color%22%3A%22%23ffffff%22%2C%22item_border_bottom%22%3A%22on%22%2C%22item_description%22%3A%22both%22%2C%22item_link%22%3A%22off%22%2C%22item_description_length%22%3A%22100%22%2C%22item_description_color%22%3A%22%23c1c2c3%22%2C%22item_date%22%3A%22on%22%2C%22item_date_format%22%3A%22%25b%20%25e%2C%20%25Y%20%25l%3A%25M%20%25p%22%2C%22item_date_timezone%22%3A%22%22%2C%22item_description_style%22%3A%22html%22%2C%22item_thumbnail%22%3A%22crop%22%2C%22item_thumbnail_selection%22%3A%22auto%22%2C%22article_num%22%3A%2215%22%2C%22item_player%22%3A%22off%22%2C%22keyword_inc%22%3A%22%22%2C%22keyword_exc%22%3A%22%22%7D"></script> <!-- end feedwind code -->
+                </div>
             </div>
-        </div>
+        </a>
     </section>
     
     <!-- Resource Section -->
@@ -120,6 +158,15 @@
             </div>
         </div>
     </section>
+    
+    <!-- Footer -->
+    <footer>
+        <hr>
+        <div class="container text-center">
+            <p><i>©2016-2017 SBHS Robotics.</i></p>
+            <p><i>Created by Mikel Matticoli</i></p>
+        </div>
+    </footer>
 
    <!-- Map Section -->
 <!--     <div id="map"></div>-->
@@ -134,11 +181,6 @@
 
     <!-- Plugin JavaScript -->
     <script src="./javascripts/jquery.easing.min.js"></script>
-
-    <!-- Import JavaScript -->
-    <script src="./javascripts/w3data.js"></script>
-    <script>w3IncludeHTML();</script>
-    <!--    TODO: Replace with custom script for quicker loading    -->
     
     <!-- Google Maps API Key - Use your own API key to enable the map feature. More information on the Google Maps API can be found at https://developers.google.com/maps/ -->
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRngKslUGJTlibkQ3FkfTxj3Xss1UlZDA&sensor=false"></script>
