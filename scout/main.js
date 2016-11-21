@@ -441,6 +441,13 @@ ScoutNet.prototype.saveUser = function(user) {
             // User already exists
             toastr.success("Welcome back, " + user.displayName + "!")
             console.log(snapshot.val());
+            
+            this.database.ref('admins/' + user.uid).once('value').then( function (snapshot) {
+                if(!snapshot.val()) {
+                    this.adminDropdown.style = "pointer-events: none;";
+                }
+            }.bind(this));
+            
             if (!(snapshot.val().active)) {
                 //toastr signed out setup
                 toastr.options = {
@@ -478,7 +485,7 @@ ScoutNet.prototype.saveUser = function(user) {
         }
         
     console.log('done');
-    });
+    }.bind(this));
 }
 
 // Triggers when the auth state change for instance when the user signs-in or signs-out.

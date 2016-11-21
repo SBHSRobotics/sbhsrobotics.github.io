@@ -12,7 +12,7 @@
 				".read": "true"
     },
     "admins": {
-        ".read": "false",
+        ".read": "true",
         ".write": "false"
     }
   }
