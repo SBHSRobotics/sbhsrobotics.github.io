@@ -16,7 +16,7 @@
 
     <!-- Add to homescreen for Chrome on Android -->
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Friendly Chat">
+    <meta name="application-name" content="ScoutNet">
     <meta name="theme-color" content="#303F9F">
 
     <!-- Add to homescreen for Safari on iOS -->
@@ -46,13 +46,25 @@
     <div id="nav">
        <div id="user-container" class="bar">
         <i id="logo" class="material-icons">language</i>
-        <div id="user-pic"></div>
-        <div hidden id="user-name" class="hidden-xs"></div>
-        <button hidden id="sign-out" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-color-text--white">
-          Sign-out
-        </button>
+        <div id="admin-dropdown" class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown">
+                <div hidden id="user-name" class="hidden"></div>
+                <div id="user-pic"></div>
+                
+            </a>
+            <ul class="dropdown-menu dropdown-menu-left">
+                <li><a id="grant-access" href="#">Grant Access</a></li>
+                <li><a id="revoke-access" href="#">Revoke Access</a></li>
+                
+                
+            </ul>
+        </div>
         <button hidden id="sign-in" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-color-text--white">
           <i class="material-icons">account_circle</i>Sign-In
+        </button>
+           
+        <button hidden id="sign-out" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-color-text--white">
+            Sign-out
         </button>
       </div>
     </div>

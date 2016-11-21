@@ -31,6 +31,9 @@ function ScoutNet() {
     this.addButton = document.getElementById('add');
     this.deleteButton = document.getElementById('delete');
     this.dataTable = document.getElementById('data');
+    this.grantAccessButton = document.getElementById('grant-access');
+    this.revokeAccessButton = document.getElementById('revoke-access');
+    this.adminDropdown = document.getElementById('admin-dropdown');
     
     $.getJSON( "teamData.json", function(data) {
         this.dataTemplate = data;
@@ -43,6 +46,8 @@ function ScoutNet() {
     this.signInButton.addEventListener('click', this.signIn.bind(this));
     this.addButton.addEventListener('click', this.createTeam.bind(this));
     this.deleteButton.addEventListener('click', this.deleteTeam.bind(this));
+    this.grantAccessButton.addEventListener('click', this.grantUserAccessPopup.bind(this));
+    this.revokeAccessButton.addEventListener('click', this.revokeUserAccessPopup.bind(this));
     
     this.teamDropdown.addEventListener('change', this.displaySelectedTeam.bind(this));
 
@@ -135,6 +140,78 @@ ScoutNet.prototype.addTeam = function (key, value) {
     this.teamDropdown.appendChild(op);
 }
 
+ScoutNet.prototype.grantUserAccessPopup = function() {
+    var email = window.prompt("Enter user's email address:");
+    
+    if (!this.database) {
+        console.log('nope');
+        ScoutNet.prototype.grantUserAccessPopup();
+        return;
+    } else {
+        console.log('yup');
+    }
+    
+    var usersRef = this.database.ref('users');
+    
+    usersRef.orderByChild("email").equalTo(email).once('value').then(function (snapshot) {
+        if(snapshot.val() != null) {
+            var user = snapshot.val()[Object.keys(snapshot.val())[0]];
+            console.log("Granting access to " + user.name + " :: " + user.email);
+            var userRef = this.database.ref('users/'+user.uid);
+            userRef.set({
+                uid: user.uid,
+                name: user.name,
+                email: user.email,
+                active: true
+            }).then(function () {
+                console.log("User activated successfully!");
+                toastr.success("Access granted to " + user.name + "!");
+            }.bind(this)).catch(function (error) {
+                console.error('Error activating user', error);
+                toastr.error("Error granting access to user");
+            });
+        } else {
+            toastr.error("No user with that email address in database", "Uh oh..");
+        }
+    }.bind(this));
+}
+
+ScoutNet.prototype.revokeUserAccessPopup = function() {
+    var email = window.prompt("Enter user's email address:");
+    
+    if (!this.database) {
+        console.log('nope');
+        ScoutNet.prototype.revokeUserAccessPopup();
+        return;
+    } else {
+        console.log('yup');
+    }
+    
+    var usersRef = this.database.ref('users');
+    
+    usersRef.orderByChild("email").equalTo(email).once('value').then(function (snapshot) {
+        if(snapshot.val() != null) {
+            var user = snapshot.val()[Object.keys(snapshot.val())[0]];
+            console.log("Revoking access from " + user.name + " :: " + user.email);
+            var userRef = this.database.ref('users/'+user.uid);
+            userRef.set({
+                uid: user.uid,
+                name: user.name,
+                email: user.email,
+                active: false
+            }).then(function () {
+                console.log("User disabled successfully!");
+                toastr.success("Access revoked from " + user.name + "!");
+            }.bind(this)).catch(function (error) {
+                console.error('Error disabling user', error);
+                toastr.error("Error revoking access from user");
+            });
+        } else {
+            toastr.error("No user with that email address in database", "Uh oh..");
+        }
+    }.bind(this));
+}
+
 // Displays a Message in the UI.
 ScoutNet.prototype.displaySelectedTeam = function (teamName = undefined) {
     if (!teamName || typeof(teamName) != typeof('')) {
@@ -224,7 +301,7 @@ ScoutNet.prototype.saveTeam = function (team) {
             return;
         }
         this.teamsRef.push({
-            user: currentUser.displayName,
+            user: currentUser.uid,
             name: team.name,
             timestamp: Date.now()
         }).then(function () {
@@ -348,14 +425,82 @@ ScoutNet.prototype.signOut = function () {
     this.auth.signOut();
 };
 
+ScoutNet.prototype.saveUser = function(user) {    
+    if (!this.database) {
+        console.log('nope');
+        ScoutNet.prototype.saveUser(user);
+        return;
+    } else {
+        console.log('yup');
+    }
+    
+    var userRef = this.database.ref('users/'+user.uid);
+    
+    userRef.once('value').then(function (snapshot) {
+        if(snapshot.val() != null) {
+            // User already exists
+            toastr.success("Welcome back, " + user.displayName + "!")
+            console.log(snapshot.val());
+            
+            this.database.ref('admins/' + user.uid).once('value').then( function (snapshot) {
+                if(!snapshot.val()) {
+                    this.adminDropdown.style = "pointer-events: none;";
+                }
+            }.bind(this));
+            
+            if (!(snapshot.val().active)) {
+                //toastr signed out setup
+                toastr.options = {
+                  "closeButton": false,
+                  "debug": false,
+                  "newestOnTop": false,
+                  "progressBar": false,
+                  "positionClass": "toast-bottom-center",
+                  "preventDuplicates": false,
+                  "onclick": null,
+                  "showDuration": "-1",
+                  "hideDuration": "-1",
+                  "timeOut": "-1",
+                  "extendedTimeOut": "-1",
+                  "showEasing": "swing",
+                  "hideEasing": "linear",
+                  "showMethod": "fadeIn",
+                  "hideMethod": "fadeOut"
+                }
+                toastr.error("You do not have permission to access the database. Contact the head scout if you believe this is an error.", "Uh oh..");
+            }
+        } else {
+            console.log("Adding new user to database...");
+            userRef.set({
+                uid: user.uid,
+                name: user.displayName,
+                email: user.email
+            }).then(function () {
+                console.log("New user added successfully!");
+                toastr.success("Welcome, " + user.displayName + "!");
+            }.bind(this)).catch(function (error) {
+                console.error('Error writing new user to Firebase Database', error);
+                toastr.error("Error saving user");
+            });
+        }
+        
+    console.log('done');
+    }.bind(this));
+}
+
 // Triggers when the auth state change for instance when the user signs-in or signs-out.
 ScoutNet.prototype.onAuthStateChanged = function (user) {
     if (user) { // User is signed in!
         this.teams = {};
+        
+        this.saveUser.bind(this)(user);
+        
+        
         while(this.teamDropdown.firstChild) {
             this.teamDropdown.removeChild(this.teamDropdown.firstChild);
         }
         // Get profile pic and user's name from the Firebase user object.
+        console.log(user);
         var profilePicUrl = user.photoURL;
         var userName = user.displayName;
 
@@ -414,24 +559,24 @@ ScoutNet.prototype.onAuthStateChanged = function (user) {
         // Show sign-in button.
         this.signInButton.removeAttribute('hidden');
 
-            //toastr signed out setup
-            toastr.options = {
-              "closeButton": false,
-              "debug": false,
-              "newestOnTop": false,
-              "progressBar": false,
-              "positionClass": "toast-bottom-center",
-              "preventDuplicates": false,
-              "onclick": null,
-              "showDuration": "-1",
-              "hideDuration": "-1",
-              "timeOut": "-1",
-              "extendedTimeOut": "-1",
-              "showEasing": "swing",
-              "hideEasing": "linear",
-              "showMethod": "fadeIn",
-              "hideMethod": "fadeOut"
-            }
+        //toastr signed out setup
+        toastr.options = {
+          "closeButton": false,
+          "debug": false,
+          "newestOnTop": false,
+          "progressBar": false,
+          "positionClass": "toast-bottom-center",
+          "preventDuplicates": false,
+          "onclick": null,
+          "showDuration": "-1",
+          "hideDuration": "-1",
+          "timeOut": "-1",
+          "extendedTimeOut": "-1",
+          "showEasing": "swing",
+          "hideEasing": "linear",
+          "showMethod": "fadeIn",
+          "hideMethod": "fadeOut"
+        }
         
         toastr.error('You must sign in');
 
