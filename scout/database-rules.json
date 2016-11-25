@@ -1,19 +1,21 @@
 {
   "rules": {
-    "teams": { 
-        ".read": "root.child('users').child(auth.uid).child('active').val() === true",
-        ".write": "root.child('users').child(auth.uid).child('active').val() === true"
-    },
-    "users": {
-      	"$uid": {
+    "$env": {
+      "teams": { 
+        ".read": "root.child($env).child('users').child(auth.uid).child('active').val() === true",
+        ".write": "root.child($env).child('users').child(auth.uid).child('active').val() === true"
+      },
+      "users": {
+          "$uid": {
+            ".read": "true",
+            ".write": "(!newData.hasChild('active')) || (root.child($env).child('admins').child(auth.uid).val() === true)"
+          },
+          ".read": "true"
+      },
+      "admins": {
           ".read": "true",
-          ".write": "(!newData.hasChild('active')) || (root.child('admins').child(auth.uid).val() === true)"
-        },
-				".read": "true"
-    },
-    "admins": {
-        ".read": "true",
-        ".write": "false"
+          ".write": "false"
+      }
     }
   }
 }
