@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Google Inc. All Rights Reserved.
+ * Copyright 2016 Mikel Matticoli. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,14 +12,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Portions of this file are derrived from FriendlyChat, which is property of Google, Inc.
+ *            https://github.com/firebase/friendlychat
  */
+
 'use strict';
 
+
+// ========== Setup/Startup: ========== //
+
 // Initializes ScoutNet.
+// All instances of "this" point to ScoutNet obj
 function ScoutNet() {
     this.checkSetup();
+    
+    // Database Prefix:
+    this.prefix = "release/";
 
-// Shortcuts to DOM Elements.
+    // Shortcuts to DOM Elements:
     this.body = document.getElementById('body');
     this.appContainer = document.getElementById('app');
     this.nav = document.getElementById('nav');
@@ -35,13 +46,16 @@ function ScoutNet() {
     this.revokeAccessButton = document.getElementById('revoke-access');
     this.adminDropdown = document.getElementById('admin-dropdown');
     
+    // Load Data Template:
     $.getJSON( "teamData.json", function(data) {
         this.dataTemplate = data;
     }.bind(this))
     .error(function () {
         window.alert("Error loading data template. Please contact database admin.");
     });
+    // TODO: Move data template to FireBase
         
+    //Wire up buttons:
     this.signOutButton.addEventListener('click', this.signOut.bind(this));
     this.signInButton.addEventListener('click', this.signIn.bind(this));
     this.addButton.addEventListener('click', this.createTeam.bind(this));
@@ -51,21 +65,51 @@ function ScoutNet() {
     
     this.teamDropdown.addEventListener('change', this.displaySelectedTeam.bind(this));
 
+    //TODO: Saving this code as reference for image support
+        //    this.editButton.addEventListener('keyup', buttonTogglingHandler);
+        //    this.messageInput.addEventListener('change', buttonTogglingHandler);
 
-//    this.editButton.addEventListener('keyup', buttonTogglingHandler);
-//    this.messageInput.addEventListener('change', buttonTogglingHandler);
-        
-    // Events for image upload.
-//    this.submitImageButton.addEventListener('click', function () {
-//        this.mediaCapture.click();
-//    }.bind(this));
-//    this.mediaCapture.addEventListener('change', this.saveImageMessage.bind(this));
+            // Events for image upload.
+        //    this.submitImageButton.addEventListener('click', function () {
+        //        this.mediaCapture.click();
+        //    }.bind(this));
+        //    this.mediaCapture.addEventListener('change', this.saveImageMessage.bind(this));
 
     this.initFirebase();
-    
-    }
+}
 
-ScoutNet.teams = {};
+// Global Vars:
+
+// Live team data
+ScoutNet.teams = {}; //TODO: Figure out why undefined errors are thrown when this is done in ScoutNet constructor
+// Template for messages.
+ScoutNet.TEAM_TEMPLATE =
+        '<div class="message-container">' +
+            '<div class="spacing"><div class="pic"></div></div>' +
+            '<div class="message"></div>' +
+            '<div class="name"></div>' +
+        '</div>';
+
+// A loading image URL.
+ScoutNet.LOADING_IMAGE_URL = 'https://www.google.com/images/spin-32.gif';
+
+
+
+
+// Checks that the Firebase SDK has been correctly setup and configured.
+ScoutNet.prototype.checkSetup = function () {
+    if (!window.firebase || !(firebase.app instanceof Function) || !window.config) {
+        console.error('You have not configured and imported the Firebase SDK. ' +
+                'Make sure you go through the codelab setup instructions.');
+    } else if (config.storageBucket === '') {
+        console.error('Your Firebase Storage bucket has not been enabled. Sorry about that. This is ' +
+                'actually a Firebase bug that occurs rarely. ' +
+                'Please go and re-generate the Firebase initialisation snippet (step 4 of the codelab) ' +
+                'and make sure the storageBucket attribute is not empty. ' +
+                'You may also need to visit the Storage tab and paste the name of your bucket which is ' +
+                'displayed there.');
+    }
+};
 
 // Sets up shortcuts to Firebase features and initiate firebase auth.
 ScoutNet.prototype.initFirebase = function () {
@@ -73,27 +117,32 @@ ScoutNet.prototype.initFirebase = function () {
     this.auth = firebase.auth();
     this.database = firebase.database();
     this.storage = firebase.storage();
+    
     // Initiates Firebase auth and listen to auth state changes.
     this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this));
 }
 
-// UI functions:
 
+// ========== UI functions: ========== //
+
+// New team popup
 ScoutNet.prototype.createTeam = function (e) {
     e.preventDefault();
-    var team = { name: window.prompt("Enter a Team Name") };
-    if (team.name) {
+    var team = { id: window.prompt("Enter a Team Name") };
+    if (team.id) {
         this.saveTeam(team);
     }
 }
 
+// Delete team popup
 ScoutNet.prototype.deleteTeam = function(e) {
     e.preventDefault();
-    if(this.selectedTeam && window.confirm("Are you sure you would like to delete team " + this.selectedTeam + "?")) {
+    if(this.selectedTeamName && window.confirm("Are you sure you would like to delete team " + this.selectedTeamName + "?")) {
         this.removeSelectedTeam();
     }
 }
 
+// Unload teams from UI
 ScoutNet.prototype.unloadTeams = function() {
     $(this.dataTable).fadeOut();
     this.dataTable.setAttribute('hidden', true);
@@ -109,22 +158,26 @@ ScoutNet.prototype.unloadTeams = function() {
     this.teamDropdown.appendChild(op);
 }
 
+// Load teams into UI
 ScoutNet.prototype.loadTeams = function () {
+    
+    // If database is not initialized, wait until it is
     if (!this.database) {
         ScoutNet.prototype.loadTeams();
         return;
     }
-    this.teamsRef = this.database.ref('teams');
+    
+    this.teamsRef = this.database.ref(this.prefix + 'teams');
     this.teamsRef.off();
     
     this.unloadTeams.bind(this)();
     
     var addTeam = function (data) {
-        var val = data.val();
-        this.addTeam(data.key, val.name);
-        if (this.selectedTeam) {
-            if (this.selectedTeam == val.name) {
-                this.displaySelectedTeam.bind(this)(val.name);
+        var team = data.val();
+        this.addTeam(data.key, team.id);
+        if (this.selectedTeamName) {
+            if (this.selectedTeamName == team.id) {
+                this.displaySelectedTeam.bind(this)(team.id);
             }
         }
     }.bind(this);
@@ -133,6 +186,7 @@ ScoutNet.prototype.loadTeams = function () {
     this.teamsRef.on('child_removed', this.loadTeams.bind(this));
 };
 
+// Add team to list
 ScoutNet.prototype.addTeam = function (key, value) {
     ScoutNet.teams[value] = true;
     var op = document.createElement('option');
@@ -140,6 +194,7 @@ ScoutNet.prototype.addTeam = function (key, value) {
     this.teamDropdown.appendChild(op);
 }
 
+// Grant user access popup
 ScoutNet.prototype.grantUserAccessPopup = function() {
     var email = window.prompt("Enter user's email address:");
     
@@ -151,13 +206,13 @@ ScoutNet.prototype.grantUserAccessPopup = function() {
         console.log('yup');
     }
     
-    var usersRef = this.database.ref('users');
+    var usersRef = this.database.ref(this.prefix + 'users');
     
     usersRef.orderByChild("email").equalTo(email).once('value').then(function (snapshot) {
         if(snapshot.val() != null) {
             var user = snapshot.val()[Object.keys(snapshot.val())[0]];
             console.log("Granting access to " + user.name + " :: " + user.email);
-            var userRef = this.database.ref('users/'+user.uid);
+            var userRef = this.database.ref(this.prefix + 'users/'+user.uid);
             userRef.set({
                 uid: user.uid,
                 name: user.name,
@@ -176,6 +231,7 @@ ScoutNet.prototype.grantUserAccessPopup = function() {
     }.bind(this));
 }
 
+// Revoke user access popup
 ScoutNet.prototype.revokeUserAccessPopup = function() {
     var email = window.prompt("Enter user's email address:");
     
@@ -187,13 +243,13 @@ ScoutNet.prototype.revokeUserAccessPopup = function() {
         console.log('yup');
     }
     
-    var usersRef = this.database.ref('users');
+    var usersRef = this.database.ref(this.prefix + 'users');
     
     usersRef.orderByChild("email").equalTo(email).once('value').then(function (snapshot) {
         if(snapshot.val() != null) {
             var user = snapshot.val()[Object.keys(snapshot.val())[0]];
             console.log("Revoking access from " + user.name + " :: " + user.email);
-            var userRef = this.database.ref('users/'+user.uid);
+            var userRef = this.database.ref(this.prefix + 'users/'+user.uid);
             userRef.set({
                 uid: user.uid,
                 name: user.name,
@@ -212,11 +268,11 @@ ScoutNet.prototype.revokeUserAccessPopup = function() {
     }.bind(this));
 }
 
-// Displays a Message in the UI.
+// Displays team selected in dropdown
 ScoutNet.prototype.displaySelectedTeam = function (teamName = undefined) {
     if (!teamName || typeof(teamName) != typeof('')) {
         console.log(teamName);
-        this.selectedTeam = this.teamDropdown.options[this.teamDropdown.selectedIndex].text;
+        this.selectedTeamName = this.teamDropdown.options[this.teamDropdown.selectedIndex].text;
     }
     
     var table = this.dataTable;
@@ -230,18 +286,17 @@ ScoutNet.prototype.displaySelectedTeam = function (teamName = undefined) {
     var displayTeam = function(data) {
         var team = data.val();
         
-        for (var prop in this.dataTemplate) {//TODO: why is this null?
+        for (var prop in this.dataTemplate) {
             if (!team[prop]) {
-//                console.log("Adding missing property " + prop + " to team " + team.name);
                 team[prop] = "";
             }
         }
         
         
         var keys = Object.keys(team).sort(function (a, b) {
-            if (a == 'name') {
+            if (a == 'id') {
                 return -1;
-            } else if (b == 'name') {
+            } else if (b == 'id') {
                 return 1;
             }
             return a.toLowerCase().localeCompare(b.toLowerCase());
@@ -286,168 +341,190 @@ ScoutNet.prototype.displaySelectedTeam = function (teamName = undefined) {
         }.bind(this));
     }
     
-    this.teamsRef.orderByChild("name").equalTo(this.selectedTeam).on("child_added", displayTeam.bind(this));
-    this.teamsRef.orderByChild("name").equalTo(this.selectedTeam).on("child_changed", displayTeam.bind(this));
+    this.teamsRef.orderByChild("id").equalTo(this.selectedTeamName).on("child_added", displayTeam.bind(this));
+    this.teamsRef.orderByChild("id").equalTo(this.selectedTeamName).on("child_changed", displayTeam.bind(this));
 };
 
-// DB functions
 
-// Saves a new team on the Firebase DB.
+// ========== Database Functions: ========== //
+
+// Saves a new team to the database.
 ScoutNet.prototype.saveTeam = function (team) {
     if (this.checkSignedIn()) {
-        var currentUser = this.auth.currentUser;
-        if (ScoutNet.teams[team.name]) {
-            toastr.error("Team " + team.name + " already exists!");
-            return;
-        }
-        this.teamsRef.push({
-            user: currentUser.uid,
-            name: team.name,
-            timestamp: Date.now()
-        }).then(function () {
-//            window.alert("Team " + team.name + " created!");
-            toastr.success("Team " + team.name + " created!")
-        }.bind(this)).catch(function (error) {
-            console.error('Error writing new team to Firebase Database', error);
-            toastr.error("Error creating team");
+        var currentUser = this.auth.currentUser,
+            teamRef = this.database.ref(this.prefix + 'teams/'+team.id);
+        
+        teamRef.once('value').then( function(snapshot) {
+            
+            // Make sure team does not exist
+            if(!snapshot.val()) { // Team DNE
+                
+                //Add team entry to database:
+                teamRef.update({
+                    id: team.id,
+                    user: currentUser.uid,
+                    timestamp: Date.now()
+                }).then(function () {
+                    toastr.success("Team " + team.id + " created!")
+                }.bind(this)).catch(function (error) {
+                    console.error('Error writing new team to Firebase Database', error);
+                    toastr.error("Error creating team");
+                });
+                
+            } else { //Team exists
+                toastr.error("Team " + team.id + " already exists!");
+            }
         });
+        
     }
 };
 
+// Updates the current selected team on database from user input
 ScoutNet.prototype.updateSelectedTeam = function (props) {
-    if (this.checkSignedIn()) {
-        var teamsRef = this.database.ref('teams');
+    // Make sure user is authenticated:
+    if (!this.checkSignedIn()) {
+        toastr.error("User not signed in", "ERROR");
+    }
+    
+    //Get reference to selected team
+    var teamRef = this.database.ref(this.prefix + 'teams/'+this.selectedTeamName);
 
-        var updateTeam = function(data) {
-            var teamRef = teamsRef.child(data.key);
+    teamRef.once('value').then( function(snapshot) {
+        console.log("Updating team:" + props);
 
-            console.log(props);
-            
-            teamRef.update(props)
-                .then(function () {
-                    toastr.success("Changes saved");
-                })
-                .catch(function (err) {
-                    toastr.error("Error editing team");
-                });
+        teamRef.update(props).then(function () {
+            toastr.success("Changes saved");
+        }).catch(function (err) {
+            toastr.error("Error editing team");
+        });
+    });
+}
+
+// Removes currently selected team from database
+ScoutNet.prototype.removeSelectedTeam = function () {
+    var teamRef = this.database.ref(this.prefix + 'teams/'+this.selectedTeamName);
+
+    teamRef.once('value').then( function(snapshot) {
+        if(!snapshot.val()) {
+            console.log(snapshot.val());
+            console.error("ERROR: Selected team DNE");
         }
 
-        teamsRef.orderByChild("name").equalTo(this.selectedTeam).on("child_added", updateTeam);
-    }
+        teamRef.remove().then(function () {
+            toastr.success("Team deleted.");
+        }).catch(function (err) {
+            toastr.error("Error deleting team");
+        });
+    }.bind(this));
 }
 
-ScoutNet.prototype.removeSelectedTeam = function () {
-    
-    var teamsRef = this.database.ref('teams');
-    
-    var removeTeam = function(data) {
-        var teamRef = teamsRef.child(data.key);
+// TODO: Keeping this code as reference for image support
+        //// Sets the URL of the given img element with the URL of the image stored in Firebase Storage.
+        //ScoutNet.prototype.setImageUrl = function (imageUri, imgElement) {
+        //    // If the image is a Firebase Storage URI we fetch the URL.
+        //    if (imageUri.startsWith('gs://')) {
+        //        imgElement.src = ScoutNet.LOADING_IMAGE_URL; // Display a loading image first.
+        //        this.storage.refFromURL(imageUri).getMetadata().then(function (metadata) {
+        //            imgElement.src = metadata.downloadURLs[0];
+        //        });
+        //    } else {
+        //        imgElement.src = imageUri;
+        //    }
+        //};
+        //
+        //// Saves a new message containing an image URI in Firebase.
+        //// This first saves the image in Firebase storage.
+        //ScoutNet.prototype.saveTeamImage = function (event) {
+        //    var file = event.target.files[0];
+        //
+        //    // Clear the selection in the file picker input.
+        ////    this.imageForm.reset();
+        //
+        //    // Check if the file is an image.
+        //    if (!file.type.match('image.*')) {
+        //
+        //    }
+        //
+        //    // Check if the user is signed-in
+        //    if (this.checkSignedIn()) {
+        //
+        //        // We add a message with a loading icon that will get updated with the shared image.
+        //        
+        //        currentUser = this.auth.currentUser;
+        ////        this.messagesRef.push({
+        ////            name: currentUser.displayName,
+        ////            imageUrl: ScoutNet.LOADING_IMAGE_URL,
+        ////            photoUrl: currentUser.photoURL || '/images/profile_placeholder.png'
+        ////        }).then(function (data) {
+        ////
+        ////            // Upload the image to Firebase Storage.
+        ////            var uploadTask = this.storage.ref(currentUser.uid + '/' + Date.now() + '/' + file.name)
+        ////                    .put(file, {'contentType': file.type});
+        ////            // Listen for upload completion.
+        ////            uploadTask.on('state_changed', null, function (error) {
+        ////                console.error('There was an error uploading a file to Firebase Storage:', error);
+        ////            }, function () {
+        ////
+        ////                // Get the file's Storage URI and update the chat message placeholder.
+        ////                var filePath = uploadTask.snapshot.metadata.fullPath;
+        ////                data.update({imageUrl: this.storage.ref(filePath).toString()});
+        ////            }.bind(this));
+        ////        }.bind(this));
+        //    }
+        //};
 
-        teamRef.remove()
-            .then(function () {
-                toastr.success("Team deleted.");
-            })
-            .catch(function (err) {
-                toastr.error("Error deleting team");
-            });
-    }
-    
-    teamsRef.orderByChild("name").equalTo(this.selectedTeam).on("child_added", removeTeam);
-}
 
-//
-//// Sets the URL of the given img element with the URL of the image stored in Firebase Storage.
-//ScoutNet.prototype.setImageUrl = function (imageUri, imgElement) {
-//    // If the image is a Firebase Storage URI we fetch the URL.
-//    if (imageUri.startsWith('gs://')) {
-//        imgElement.src = ScoutNet.LOADING_IMAGE_URL; // Display a loading image first.
-//        this.storage.refFromURL(imageUri).getMetadata().then(function (metadata) {
-//            imgElement.src = metadata.downloadURLs[0];
-//        });
-//    } else {
-//        imgElement.src = imageUri;
-//    }
-//};
-//
-//// Saves a new message containing an image URI in Firebase.
-//// This first saves the image in Firebase storage.
-//ScoutNet.prototype.saveTeamImage = function (event) {
-//    var file = event.target.files[0];
-//
-//    // Clear the selection in the file picker input.
-////    this.imageForm.reset();
-//
-//    // Check if the file is an image.
-//    if (!file.type.match('image.*')) {
-//
-//    }
-//
-//    // Check if the user is signed-in
-//    if (this.checkSignedIn()) {
-//
-//        // We add a message with a loading icon that will get updated with the shared image.
-//        
-//        currentUser = this.auth.currentUser;
-////        this.messagesRef.push({
-////            name: currentUser.displayName,
-////            imageUrl: ScoutNet.LOADING_IMAGE_URL,
-////            photoUrl: currentUser.photoURL || '/images/profile_placeholder.png'
-////        }).then(function (data) {
-////
-////            // Upload the image to Firebase Storage.
-////            var uploadTask = this.storage.ref(currentUser.uid + '/' + Date.now() + '/' + file.name)
-////                    .put(file, {'contentType': file.type});
-////            // Listen for upload completion.
-////            uploadTask.on('state_changed', null, function (error) {
-////                console.error('There was an error uploading a file to Firebase Storage:', error);
-////            }, function () {
-////
-////                // Get the file's Storage URI and update the chat message placeholder.
-////                var filePath = uploadTask.snapshot.metadata.fullPath;
-////                data.update({imageUrl: this.storage.ref(filePath).toString()});
-////            }.bind(this));
-////        }.bind(this));
-//    }
-//};
+// ========== Auth Functions: ========== //
 
-// Auth functions
-
-// Signs-in
+// Signs-in to ScoutNet using Google auth popup
 ScoutNet.prototype.signIn = function () {
     // Sign in Firebase using popup auth and Google as the identity provider.
     var provider = new firebase.auth.GoogleAuthProvider();
     this.auth.signInWithPopup(provider);
 };
 
-// Signs-out
+// Signs-out of ScoutNet
 ScoutNet.prototype.signOut = function () {
     // Sign out of Firebase.
     this.auth.signOut();
 };
 
-ScoutNet.prototype.saveUser = function(user) {    
+// Returns true if user is signed-in. Otherwise false and displays a message.
+ScoutNet.prototype.checkSignedIn = function () {
+    // Return true if the user is signed in Firebase
+    if (this.auth.currentUser) {
+        return true;
+    }
+    return false;
+};
+
+// Save new user data to database
+ScoutNet.prototype.saveUser = function(user) {
+    
+    // If database isn't initialized, wait until it is
     if (!this.database) {
-        console.log('nope');
         ScoutNet.prototype.saveUser(user);
         return;
-    } else {
-        console.log('yup');
     }
     
-    var userRef = this.database.ref('users/'+user.uid);
+    // Get reference to user entry in database
+    var userRef = this.database.ref(this.prefix + 'users/'+user.uid);
     
+    // Check if user exists
     userRef.once('value').then(function (snapshot) {
         if(snapshot.val() != null) {
             // User already exists
             toastr.success("Welcome back, " + user.displayName + "!")
             console.log(snapshot.val());
             
-            this.database.ref('admins/' + user.uid).once('value').then( function (snapshot) {
+            //Disable admin dropdown if user is not admin
+            this.database.ref(this.prefix + 'admins/' + user.uid).once('value').then( function (snapshot) {
                 if(!snapshot.val()) {
                     this.adminDropdown.style = "pointer-events: none;";
                 }
             }.bind(this));
             
+            // Check if user has access to database:
             if (!(snapshot.val().active)) {
                 //toastr signed out setup
                 toastr.options = {
@@ -471,7 +548,7 @@ ScoutNet.prototype.saveUser = function(user) {
             }
         } else {
             console.log("Adding new user to database...");
-            userRef.set({
+            userRef.set({ //Note: New user can not write to "active" property, so it must be omitted until an admin activates the user.
                 uid: user.uid,
                 name: user.displayName,
                 email: user.email
@@ -480,11 +557,10 @@ ScoutNet.prototype.saveUser = function(user) {
                 toastr.success("Welcome, " + user.displayName + "!");
             }.bind(this)).catch(function (error) {
                 console.error('Error writing new user to Firebase Database', error);
-                toastr.error("Error saving user");
+                toastr.error("Error saving new user to database. You may need to sign out and sign back in.", "Uh oh...");
             });
         }
         
-    console.log('done');
     }.bind(this));
 }
 
@@ -494,7 +570,6 @@ ScoutNet.prototype.onAuthStateChanged = function (user) {
         this.teams = {};
         
         this.saveUser.bind(this)(user);
-        
         
         while(this.teamDropdown.firstChild) {
             this.teamDropdown.removeChild(this.teamDropdown.firstChild);
@@ -579,51 +654,13 @@ ScoutNet.prototype.onAuthStateChanged = function (user) {
         }
         
         toastr.error('You must sign in');
-
-    }
-
-    
-};
-
-// Returns true if user is signed-in. Otherwise false and displays a message.
-ScoutNet.prototype.checkSignedIn = function () {
-    // Return true if the user is signed in Firebase
-    if (this.auth.currentUser) {
-        return true;
-    }
-    return false;
-};
-
-// Template for messages.
-ScoutNet.TEAM_TEMPLATE =
-        '<div class="message-container">' +
-            '<div class="spacing"><div class="pic"></div></div>' +
-            '<div class="message"></div>' +
-            '<div class="name"></div>' +
-        '</div>';
-
-// A loading image URL.
-ScoutNet.LOADING_IMAGE_URL = 'https://www.google.com/images/spin-32.gif';
-
-
-// Checks that the Firebase SDK has been correctly setup and configured.
-ScoutNet.prototype.checkSetup = function () {
-    if (!window.firebase || !(firebase.app instanceof Function) || !window.config) {
-        window.alert('You have not configured and imported the Firebase SDK. ' +
-                'Make sure you go through the codelab setup instructions.');
-    } else if (config.storageBucket === '') {
-        window.alert('Your Firebase Storage bucket has not been enabled. Sorry about that. This is ' +
-                'actually a Firebase bug that occurs rarely. ' +
-                'Please go and re-generate the Firebase initialisation snippet (step 4 of the codelab) ' +
-                'and make sure the storageBucket attribute is not empty. ' +
-                'You may also need to visit the Storage tab and paste the name of your bucket which is ' +
-                'displayed there.');
     }
 };
 
+
+
+// Startup
 window.onload = function () {
     window.scoutNet = new ScoutNet();
-//    scoutNet.onAuthStateChanged(false);
 };
-
 
