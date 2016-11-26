@@ -28,7 +28,7 @@ function ScoutNet() {
     this.checkSetup();
     
     // Database Prefix:
-    this.prefix = "dev/";
+    this.prefix = "release/";
 
     // Shortcuts to DOM Elements:
     this.body = document.getElementById('body');
