@@ -1,12 +1,12 @@
 {
-    "VERSION": 3,
-    "Date Modified": "Tue, 2 Feb 2015 00:00:00 GMT",
+    "id": null,
+    "Chassis Type": null,
     "Chassis Speed": -1,
-    "Movement": null,
-    "Shooter Speed": -1,
-    "Max Shot Distance": null,
-    "Accuracy": -1,
-    "Malfunctions": null,
+    "Intake Type": null,
+    "Lift Type": null,
+    "Lift Speed": null,
+    "Near/Far Zone": null,
+    "Notes/Comments": null,
     "Penalties": null,
-    "Comments": null
+    "Robot Malfunctions": null
 }
