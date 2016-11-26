@@ -1,11 +1,12 @@
 {
-    "VERSION": 3,
+    "id": null,
+    "VERSION": 4,
     "Date Modified": "Tue, 2 Feb 2015 00:00:00 GMT",
     "Chassis Speed": -1,
     "Movement": null,
-    "Shooter Speed": -1,
-    "Max Shot Distance": null,
-    "Accuracy": -1,
+    "Shooter?": null,
+    "Lift?": null,
+    "Near/Far Zone": null,
     "Malfunctions": null,
     "Penalties": null,
     "Comments": null
