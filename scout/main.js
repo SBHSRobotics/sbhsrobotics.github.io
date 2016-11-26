@@ -28,7 +28,7 @@ function ScoutNet() {
     this.checkSetup();
     
     // Database Prefix:
-    this.prefix = "release/";
+    this.prefix = "dev/";
 
     // Shortcuts to DOM Elements:
     this.body = document.getElementById('body');
@@ -171,18 +171,15 @@ ScoutNet.prototype.loadTeams = function () {
     this.teamsRef.off();
     
     this.unloadTeams.bind(this)();
-    
-    var addTeam = function (data) {
+    this.teamsRef.on('child_added', function(data) {
         var team = data.val();
         this.addTeam(data.key, team.id);
-        if (this.selectedTeamName) {
-            if (this.selectedTeamName == team.id) {
-                this.displaySelectedTeam.bind(this)(team.id);
-            }
+        if (!this.selectedTeamName || this.selectedTeamName === team.id) {
+            this.displaySelectedTeam.bind(this)();
         }
-    }.bind(this);
-    this.teamsRef.on('child_added', addTeam);
-    this.teamsRef.on('child_changed', this.loadTeams.bind(this));
+    }.bind(this));
+    
+//    this.teamsRef.on('child_changed', this.loadTeams.bind(this));
     this.teamsRef.on('child_removed', this.loadTeams.bind(this));
 };
 
@@ -192,7 +189,87 @@ ScoutNet.prototype.addTeam = function (key, value) {
     var op = document.createElement('option');
     op.textContent = value;
     this.teamDropdown.appendChild(op);
+    this.selectedTeamName = value;
 }
+
+// Displays team selected in dropdown
+ScoutNet.prototype.displaySelectedTeam = function () {
+    
+    // Get selected team, or hide table if there is none
+    if(this.teamDropdown.selectedIndex > 0) {
+        this.selectedTeamName = this.teamDropdown.options[this.teamDropdown.selectedIndex].text;
+    } else {
+        $(this.dataTable).fadeOut();
+        this.dataTable.setAttribute('hidden', true);
+        return;
+    }
+    
+    // If there is a team selected, show the data table
+    var table = this.dataTable;
+    $(table).fadeIn();
+    table.removeAttribute('hidden');
+    
+     while(table.childNodes[2]) {
+        table.removeChild(table.lastChild);
+    }
+    
+    this.teamsRef.orderByChild("id").equalTo(this.selectedTeamName).on("child_added", function(data) {
+        var team = data.val();
+        
+        for (var prop in this.dataTemplate) {
+            if (!team[prop]) {
+                team[prop] = "";
+            }
+        }
+        
+        
+        var keys = Object.keys(team).sort(function (a, b) {
+            if (a == 'id') {
+                return -1;
+            } else if (b == 'id') {
+                return 1;
+            }
+            return a.toLowerCase().localeCompare(b.toLowerCase());
+        });
+        
+        keys.forEach(function (prop) {
+            if (prop != 'user' && prop != 'timestamp') {
+                var row = document.createElement('tr');
+                var attr = document.createElement('td');
+                var value = document.createElement('td');
+                var input = document.createElement('input');
+                
+                attr.textContent = prop.toUpperCase();
+                input.value = team[prop];
+                value.appendChild(input);
+                
+                const property = prop;
+                const val = input;
+
+                value.addEventListener('change', function() {
+                    var changes = {};
+                    changes[property] = val.value;
+                    this.updateSelectedTeam.bind(this)(changes);
+                }.bind(this));
+                                
+                var valref = this.database.ref(this.prefix + "teams/" + team.id + "/" + prop);
+                
+                valref.on('value', function(data) {
+                    val.value = data.val();
+                }.bind(this));
+                
+                row.appendChild(attr);
+                row.appendChild(value);
+                
+                attr.className = "table-cell";
+                value.className = "table-cell";
+                input.className = "table-input";
+                
+                table.appendChild(row);
+            }
+        }.bind(this));
+    }.bind(this));
+};
 
 // Grant user access popup
 ScoutNet.prototype.grantUserAccessPopup = function() {
@@ -267,83 +344,6 @@ ScoutNet.prototype.revokeUserAccessPopup = function() {
         }
     }.bind(this));
 }
-
-// Displays team selected in dropdown
-ScoutNet.prototype.displaySelectedTeam = function (teamName = undefined) {
-    if (!teamName || typeof(teamName) != typeof('')) {
-        console.log(teamName);
-        this.selectedTeamName = this.teamDropdown.options[this.teamDropdown.selectedIndex].text;
-    }
-    
-    var table = this.dataTable;
-    $(table).fadeIn();
-    table.removeAttribute('hidden');
-    
-     while(table.childNodes[2]) {
-        table.removeChild(table.lastChild);
-    }
-    
-    var displayTeam = function(data) {
-        var team = data.val();
-        
-        for (var prop in this.dataTemplate) {
-            if (!team[prop]) {
-                team[prop] = "";
-            }
-        }
-        
-        
-        var keys = Object.keys(team).sort(function (a, b) {
-            if (a == 'id') {
-                return -1;
-            } else if (b == 'id') {
-                return 1;
-            }
-            return a.toLowerCase().localeCompare(b.toLowerCase());
-        });
-        
-        console.log(keys);
-        
-        keys.forEach(function (prop) {
-            if (prop != 'user' && prop != 'timestamp') {
-                var row = document.createElement('tr');
-                var attr = document.createElement('td');
-                var value = document.createElement('td');
-                var input = document.createElement('input');
-                
-                attr.textContent = prop.toUpperCase();
-                input.value = team[prop];
-                value.appendChild(input);
-                
-                const property = prop;
-                const val = input;
-
-                var change = function() {
-                    var changes = {};
-                    console.log(val.value);
-                    changes[property] = val.value;
-//                    changes['user'] = this.auth.currentUser;
-//                    changes['timestamp'] = new Date();
-                    console.log(changes);
-                    this.updateSelectedTeam.bind(this)(changes);
-                }
-                value.addEventListener('change', change.bind(this));
-                
-                row.appendChild(attr);
-                row.appendChild(value);
-                
-                attr.className = "table-cell";
-                value.className = "table-cell";
-                input.className = "table-input";
-                
-                table.appendChild(row);
-            }
-        }.bind(this));
-    }
-    
-    this.teamsRef.orderByChild("id").equalTo(this.selectedTeamName).on("child_added", displayTeam.bind(this));
-    this.teamsRef.orderByChild("id").equalTo(this.selectedTeamName).on("child_changed", displayTeam.bind(this));
-};
 
 
 // ========== Database Functions: ========== //
