@@ -129,8 +129,11 @@ ScoutNet.prototype.initFirebase = function () {
 ScoutNet.prototype.createTeam = function (e) {
     e.preventDefault();
     var team = { id: window.prompt("Enter a Team Name") };
-    if (team.id) {
+    team.id = team.id.trim();
+    if (team.id && team.id.length > 1) {
         this.saveTeam(team);
+    } else {
+        toastr.error("Invalid team ID!");
     }
 }
 
