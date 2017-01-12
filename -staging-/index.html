@@ -72,7 +72,7 @@
                         <a class="page-scroll" href="#contact">Contact</a>
                     </li>
                     <li>
-                        <a class="page-scroll" style="color: lightblue;" href="https://scoutnet-d920d.firebaseapp.com/">ScoutNet</a>
+                        <a class="page-scroll" style="color: lightblue;" onclick="scoutNet()" href="#">ScoutNet</a>
                         <!--TODO: Get that style tag out of there-->
                     </li>
                 </ul>
@@ -138,7 +138,35 @@
                     </p>
                   </div>
                     <div id="about-teams" class="tab-pane fade">
+                        <h2>Meet the CREW</h2>
+                        <p>We are extremely lucky to have two advisers who put in endless time and effort beyond their pay grade to allow our program to thrive!</p>
+                        <div class="row">
+                            <div class="col-md-4 col-md-offset-1">
+                                <img src="./media/brady.jpg"><p>Matthew Brady</p>
+                            </div>
+                            <div class="col-md-4 col-md-offset-1">
+                                <img src="./media/robles.png"><p>Alexandria Robles</p>
+                            </div>
+                        </div>
                         
+                        <p>Our program consists of 4 competitive teams: (750C, 750R, 750E, and 750W)</p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                <img width="100%" src="./media/clogo.jpg">
+                            </div>
+                            <div class="col-md-6">
+                                <img width="100%" src="./media/rlogo.png">
+                            </div>
+                        </div>      
+                        <br>
+                        <div class="row">
+                                <div class="col-md-6">
+                                <img width="100%" src="./media/elogo.png">
+                            </div>
+                            <div class="col-md-6">
+                                <img width="100%" src="./media/wlogo.jpg">
+                            </div>
+                        </div>
                     </div> 
                   <div id="about-vex" class="tab-pane fade">
                     <br>
@@ -203,12 +231,13 @@
                     <div id="sponsors" class="tab-pane fade in active">
                         <h3>Sponsorship</h3>
                         <h4>The SBHS Robotics program relies on the generosity of the community we strive to give back to.</h4>
-                        <h5>Would you like your organization to be listed here? Please click the button below for more information: </h5>
+                        <p>Would you like your organization to be listed here? Please click the button below for more information: </p>
                         <br>
                         <center><a href="https://docs.google.com/document/d/1G-J_J75pNzweGYoVICj8gvjqKuWWsphN_S2Wi3sU4kQ/edit?usp=sharing"><button style="color: black; border-radius: 10px;"><h1>Sponsor Letter</h1></button></a></center>
                     </div> 
                     <div id="community" class="tab-pane fade">
                         <h3>Robotics is Community</h3>
+                        <p>We would love to attend your STEM/School/Community event to show off what robotics is all about! <a class = "page-scroll" href="#contact">Please contact the student ambassador for more information.</a></p>
                         <div class="container-fluid">
                             <div class="row">
                                 <div class="col-lg-6 col-md-4"><img width="100%" src="./media/inv-conv.png"></img></div>
@@ -224,8 +253,8 @@
                     </div>
                     <div id="join" class="tab-pane fade">
                         <h2>Join Us</h2>
-                        <h4>We are no longer accepting new member applications for the 2016-2017 season.</h4>
-                        <h4>If you would like to find other ways to get involved, please <a class = "page-scroll" href="#contact">please contact one of the advisers or the student ambassador.</a></h4>
+                        <p>We are no longer accepting new member applications for the 2016-2017 season.</p>
+                        <p>If you would like to find other ways to get involved, please <a class = "page-scroll" href="#contact">please contact one of the advisers or the student ambassador.</a></p>
                     </div>
                     <div id="parents" class="tab-pane fade">
                         <h3>Robotics Parent Association</h3>
@@ -255,10 +284,10 @@
         <div class="row">
             <div class="col-md-7 col-md-offset-3">
                 <h2>Questions? Comments? Concerns?</h2>
-                <p>Feel free to email us:</p>
-                <h4>Matthew Brady (Program Adviser)<br><a href="mailto:matthew.brady@sbschools.org">Matthew.Brady@sbschools.org</a></h4>
-                <h4>Alexandria Robles (Program Adviser)<br><a href="mailto:alexandria.robles@sbschools.org">Alexandria.Robles@sbschools.org</a></h4>
-                <h4>Mikel Matticoli (Student Ambassador)<br><a href="mailto:vex750evolution@gmail.com">Vex750Evolution@gmail.com</a></h4>
+                <h4>Feel free to email us:</h4>
+                <p>Matthew Brady (Program Adviser)<br><a href="mailto:matthew.brady@sbschools.org">Matthew.Brady@sbschools.org</a></p>
+                <p>Alexandria Robles (Program Adviser)<br><a href="mailto:alexandria.robles@sbschools.org">Alexandria.Robles@sbschools.org</a></p>
+                <p>Mikel Matticoli (Student Ambassador)<br><a href="mailto:vex750evolution@gmail.com">Vex750Evolution@gmail.com</a></p>
                 
                 </table>
                 <ul class="list-inline banner-social-buttons">
@@ -295,6 +324,14 @@
        
     <!-- Custom Theme JavaScript -->
     <script src="./javascripts/grayscale.js"></script>
+
+    <script>
+        function scoutNet() {
+            if( window.confirm('ScoutNet is SBHS\'s vrc scouting database. Contact the Student Ambassador to learn more or request access.\n\nAre you sure you want to leave SBHS Robotics and launch ScoutNet?','SBHS ScoutNet')) {
+                window.location.href = 'https://scoutnet-d920d.firebaseapp.com/';
+            }
+        }
+    </script>
     
 
 </body>
